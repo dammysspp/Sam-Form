@@ -28,16 +28,16 @@
 
       <div class="nav-actions">
         <button class="btn btn-secondary" id="btn-cloud-settings" onclick="App.openCloudConfigModal()">
-          <span style="vertical-align:-2px;">${icon('zap', 15)}</span> Connect Supabase
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Connect Supabase
         </button>
         <button class="btn btn-secondary" onclick="App.openDashboardImport()">
-          <span style="vertical-align:-2px;">${icon('download', 15)}</span> Import JSON
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Import JSON
         </button>
         <a href="builder.html" class="btn btn-primary">
-          <span style="vertical-align:-2px;">${icon('plus', 15)}</span> Create New Form
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Create New Form
         </a>
         <button class="btn btn-outline btn-sm" onclick="FormForgeAuth.logout()" title="Sign Out Admin" style="margin-left: 0.5rem;">
-          <span style="vertical-align:-2px;">${icon('logOut', 14)}</span> Sign Out
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Sign Out
         </button>
       </div>
     </div>
@@ -49,27 +49,37 @@
     <!-- Top Metrics Overview -->
     <section class="metrics-overview-grid" aria-label="Platform Statistics">
       <div class="metric-card">
-        <span class="metric-icon" style="color:var(--primary);">${icon('form', 24)}</span>
+        <span class="metric-icon" style="color:var(--primary);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </span>
         <div class="metric-val" id="metric-total-forms">0</div>
         <div class="metric-label">Total Forms & Assessments</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon" style="color:var(--success);">${icon('check', 24)}</span>
+        <span class="metric-icon" style="color:var(--success);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
         <div class="metric-val" id="metric-published-forms">0</div>
         <div class="metric-label">Published / Active</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon" style="color:#d97706;">${icon('edit', 24)}</span>
+        <span class="metric-icon" style="color:#d97706;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </span>
         <div class="metric-val" id="metric-draft-forms">0</div>
         <div class="metric-label">Drafts in Progress</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon" style="color:#2563eb;">${icon('users', 24)}</span>
+        <span class="metric-icon" style="color:#2563eb;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </span>
         <div class="metric-val" id="metric-total-responses">0</div>
         <div class="metric-label">Total Submissions</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon" style="color:#059669;">${icon('trendingUp', 24)}</span>
+        <span class="metric-icon" style="color:#059669;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        </span>
         <div class="metric-val" id="metric-avg-score">0%</div>
         <div class="metric-label">Overall Average Score</div>
       </div>
