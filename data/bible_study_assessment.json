@@ -1,0 +1,225 @@
+{
+  "title": "Bible Study Quarterly Assessment",
+  "description": "Comprehensive evaluation covering Lessons 40 to 51 on biblical characters, God's timing, stewardship, missions, and prophecy.",
+  "timeLimit": 30,
+  "passingScore": 70,
+  "mode": "exam",
+  "theme": "indigo",
+  "sections": [
+    {
+      "id": "sec-1",
+      "title": "Biblical Characters & God's Timing (Lessons 40–42)",
+      "description": "Questions on Mordecai, John the Beloved, and divine timing."
+    },
+    {
+      "id": "sec-2",
+      "title": "Stewardship & Missions (Lessons 44–47)",
+      "description": "Questions on occupying till He comes, diversity in missions, and restoring wounded soldiers."
+    },
+    {
+      "id": "sec-3",
+      "title": "Eschatology & Final Reflection (Lessons 49–51)",
+      "description": "Questions on the Book of Life, Resurrections, Second Death, and personal reflection."
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_bs_1",
+      "sectionId": "sec-1",
+      "type": "multiple_choice",
+      "question": "In lesson 40, Mordecai, Mordecai was of the tribe of ________",
+      "options": ["Levi", "Gad", "Benjamin", "Dan"],
+      "answer": "Benjamin",
+      "points": 1,
+      "required": true,
+      "explanation": "Mordecai was a Benjamite, son of Jair, son of Shimei, son of Kish (Esther 2:5)."
+    },
+    {
+      "id": "q_bs_2",
+      "sectionId": "sec-1",
+      "type": "multiple_choice",
+      "question": "One of the characters of Mordecai is ____________",
+      "options": ["selfish", "principled", "greedy", "fearful"],
+      "answer": "principled",
+      "points": 1,
+      "required": true,
+      "explanation": "Mordecai was known for being steadfast and principled, refusing to bow to Haman against God's commands."
+    },
+    {
+      "id": "q_bs_3",
+      "sectionId": "sec-1",
+      "type": "short_answer",
+      "question": "In lesson 41, \"John the Beloved\", Jesus nicknamed John and his brother James, \"Boanerges\" which means Sons of ________",
+      "answer": "Thunder",
+      "points": 1,
+      "required": true,
+      "explanation": "In Mark 3:17, Jesus surnamed James and John 'Boanerges', which means Sons of Thunder."
+    },
+    {
+      "id": "q_bs_4",
+      "sectionId": "sec-1",
+      "type": "multiple_choice",
+      "question": "According to Acts 3:1-3, John the Beloved was with ________ at the healing of the lame man in the temple.",
+      "options": ["Matthew", "Luke", "Timothy", "Peter"],
+      "answer": "Peter",
+      "points": 1,
+      "required": true,
+      "explanation": "Acts 3:1 states: 'Now Peter and John went up together into the temple at the hour of prayer...'"
+    },
+    {
+      "id": "q_bs_5",
+      "sectionId": "sec-1",
+      "type": "multiple_choice",
+      "question": "According to Lesson 42, \"God’s Timing\", where was this memory verse taken from? \"He hath made everything beautiful in His time also he hath set the world in their heart, so that no man can find out the work that God maketh from the beginning to the end\"",
+      "options": ["Ecclesiastes 4:12", "Proverbs 4:7", "Ecclesiastes 3:11", "Proverbs 3:5"],
+      "answer": "Ecclesiastes 3:11",
+      "points": 1,
+      "required": true
+    },
+    {
+      "id": "q_bs_6",
+      "sectionId": "sec-1",
+      "type": "multiple_choice",
+      "question": "According to John 11:21-23, God's timing is never ________ and it is never ________.",
+      "options": ["dull/bright", "fast/slow", "early/late", "good/bad"],
+      "answer": "early/late",
+      "points": 1,
+      "required": true,
+      "explanation": "God's timing is always perfect—never early, never late."
+    },
+    {
+      "id": "q_bs_7",
+      "sectionId": "sec-2",
+      "type": "short_answer",
+      "question": "According to Hosea 4:6, one of the golden rules of investment is ________",
+      "answer": "Knowledge",
+      "points": 1,
+      "required": true,
+      "explanation": "Hosea 4:6 states: 'My people are destroyed for lack of knowledge...'"
+    },
+    {
+      "id": "q_bs_8",
+      "sectionId": "sec-2",
+      "type": "multiple_choice",
+      "question": "In lesson 44, \"Occupy till I come\", the pound represents whatever God gives to man to make him fulfil his purpose in life. This statement is:",
+      "options": ["False", "True"],
+      "answer": "True",
+      "points": 1,
+      "required": true
+    },
+    {
+      "id": "q_bs_9",
+      "sectionId": "sec-2",
+      "type": "short_answer",
+      "question": "________ is an example of a biblical character that spent his pound. (Write the name of one person in the bible)",
+      "answer": "Prodigal Son",
+      "points": 1,
+      "required": true,
+      "explanation": "The Prodigal Son wasted his substance/inheritance, while servants in parables traded with their pounds."
+    },
+    {
+      "id": "q_bs_10",
+      "sectionId": "sec-2",
+      "type": "short_answer",
+      "question": "According to Luke 19:20-21, ________ is one of the reasons why people keep the pound.",
+      "answer": "Fear",
+      "points": 1,
+      "required": true,
+      "explanation": "Luke 19:21: 'For I feared thee, because thou art an austere man...'"
+    },
+    {
+      "id": "q_bs_11",
+      "sectionId": "sec-2",
+      "type": "multiple_choice",
+      "question": "In lesson 46, \"Missions: Navigating diversity\", our memory verse, \"And he said unto them, Go ye into all the world, and preach the gospel to every creature\" was taken from:",
+      "options": ["Mark 16:16", "Matthew 28:20", "Mark 16:15", "Matthew 16:16"],
+      "answer": "Mark 16:15",
+      "points": 1,
+      "required": true
+    },
+    {
+      "id": "q_bs_12",
+      "sectionId": "sec-2",
+      "type": "short_answer",
+      "question": "To keep the pound means to ________",
+      "answer": "hide it",
+      "points": 1,
+      "required": true,
+      "explanation": "To keep/hide the pound is to fail to use God-given gifts and talents for His purpose."
+    },
+    {
+      "id": "q_bs_13",
+      "sectionId": "sec-2",
+      "type": "short_answer",
+      "question": "According to Lesson 47, \"The Wounded soldier\", one of the ways to restore the wounded soldier is by building a strong ________ system.",
+      "answer": "support",
+      "points": 1,
+      "required": true
+    },
+    {
+      "id": "q_bs_14",
+      "sectionId": "sec-3",
+      "type": "short_answer",
+      "question": "The word Armageddon comes from a ________ word \"Har-Magedone\".",
+      "answer": "Hebrew",
+      "points": 1,
+      "required": true,
+      "explanation": "Armageddon comes from Hebrew 'Har-Magedone' (Mount of Megiddo)."
+    },
+    {
+      "id": "q_bs_15",
+      "sectionId": "sec-3",
+      "type": "multiple_choice",
+      "question": "In lesson 49, \"The Book of Life\", the scripture establishes that there are Books and there is the Book which is the Book of life. Is this statement true or false?",
+      "options": ["True", "False"],
+      "answer": "True",
+      "points": 1,
+      "required": true,
+      "explanation": "Revelation 20:12: '...and the books were opened: and another book was opened, which is the book of life.'"
+    },
+    {
+      "id": "q_bs_16",
+      "sectionId": "sec-3",
+      "type": "short_answer",
+      "question": "According to Lesson 50, \"The Resurrection\", the Book of Revelation 20:4-6 mentions a ________ Resurrection.",
+      "answer": "First",
+      "points": 1,
+      "required": true,
+      "explanation": "Revelation 20:6: 'Blessed and holy is he that hath part in the first resurrection...'"
+    },
+    {
+      "id": "q_bs_17",
+      "sectionId": "sec-3",
+      "type": "short_answer",
+      "question": "The second Resurrection is the Resurrection of those who ________ Jesus as their Savior.",
+      "answer": "rejected",
+      "points": 1,
+      "required": true
+    },
+    {
+      "id": "q_bs_18",
+      "sectionId": "sec-3",
+      "type": "paragraph",
+      "question": "In Lesson 51, \"The Second Death\", the book of Revelation 21:8 listed the group of people who will partake in the second death. List 2 types of persons in this category.",
+      "answer": "fearful, unbelieving, abominable, murderers, whoremongers, sorcerers, idolaters, liars",
+      "points": 2,
+      "required": true,
+      "explanation": "Revelation 21:8 lists the fearful, unbelieving, abominable, murderers, whoremongers, sorcerers, idolaters, and all liars."
+    },
+    {
+      "id": "q_bs_19",
+      "sectionId": "sec-3",
+      "type": "paragraph",
+      "question": "Which of the lessons in this quarter challenged you the most and why?",
+      "points": 1,
+      "required": false
+    }
+  ],
+  "settings": {
+    "enableTimer": true,
+    "randomizeQuestions": false,
+    "randomizeOptions": true,
+    "negativeMarking": 0,
+    "showStudyFeedback": false
+  }
+}

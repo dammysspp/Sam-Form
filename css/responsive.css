@@ -1,0 +1,153 @@
+/* ==========================================================================
+   FormForge Responsive & Accessibility Stylesheet
+   ========================================================================== */
+
+/* Tablet and Mobile Optimization */
+@media (max-width: 768px) {
+  .navbar-container, .builder-topbar, .header-container, .results-header-container {
+    padding: 0.6rem 1rem;
+  }
+
+  .brand-title {
+    max-width: 220px;
+    font-size: 1rem;
+  }
+
+  .builder-stats-pill {
+    display: none;
+  }
+
+  .builder-tabs-bar {
+    gap: 1rem;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0 1rem;
+  }
+
+  .builder-nav-tab {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .metrics-overview-grid, .score-kpi-grid, .inspect-score-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-2-col {
+    grid-template-columns: 1fr;
+  }
+
+  .q-card-title-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .q-type-select {
+    width: 100%;
+  }
+
+  .q-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .q-footer-left {
+    justify-content: space-between;
+  }
+
+  .responder-navigator-sidebar {
+    width: 100%;
+    right: -100%;
+  }
+
+  .modal-card {
+    max-height: 95vh;
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .score-kpi-grid, .inspect-score-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .forms-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print Stylesheet for PDF & Paper Exams */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+
+  .app-navbar, 
+  .builder-header, 
+  .builder-tabs-bar, 
+  .builder-bottom-controls, 
+  .responder-header, 
+  .responder-nav-bar, 
+  .responder-navigator-sidebar, 
+  .results-header-actions, 
+  .table-toolbar, 
+  .toast-container,
+  .btn-flag,
+  .btn-clear-selection,
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  .builder-workspace, .responder-main-layout, .results-content-container, .results-screen-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .question-builder-card, .responder-question-card, .review-q-card, .metric-card, .chart-card {
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+
+  .results-hero-card {
+    border: 2px solid #000000 !important;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessibility: High Contrast Mode */
+body.theme-high-contrast {
+  --primary: #000000;
+  --primary-hover: #1f2937;
+  --primary-light: #f3f4f6;
+  --bg-app: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f9fafb;
+  --text-main: #000000;
+  --text-muted: #374151;
+  --border-color: #000000;
+}
+
+body.theme-high-contrast .question-builder-card,
+body.theme-high-contrast .responder-question-card,
+body.theme-high-contrast .form-card {
+  border: 2px solid #000000;
+}

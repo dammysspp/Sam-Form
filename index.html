@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FormForge — Form & Assessment Platform</title>
+  <meta name="description" content="Offline-first assessment platform and form builder with real-time timers, exams, and analytics." />
+  
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4f46e5" />
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="app-navbar">
+    <div class="navbar-container">
+      <a href="index.html" class="brand-logo">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" rx="20" fill="currentColor"/>
+          <path d="M28 26h44v10H28zm0 20h44v10H28zm0 20h26v10H28z" fill="#ffffff"/>
+          <circle cx="72" cy="66" r="8" fill="#10b981"/>
+        </svg>
+        <span>FormForge</span>
+      </a>
+
+      <div class="nav-actions">
+        <button class="btn btn-secondary" id="btn-cloud-settings" onclick="App.openCloudConfigModal()">
+          ⚡ Connect Supabase
+        </button>
+        <button class="btn btn-secondary" onclick="App.openDashboardImport()">
+          📥 Import JSON
+        </button>
+        <a href="builder.html" class="btn btn-primary">
+          + Create New Form
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Dashboard Container -->
+  <main class="dashboard-container">
+    
+    <!-- Top Metrics Overview -->
+    <section class="metrics-overview-grid" aria-label="Platform Statistics">
+      <div class="metric-card">
+        <span class="metric-icon">📑</span>
+        <div class="metric-val" id="metric-total-forms">0</div>
+        <div class="metric-label">Total Forms & Assessments</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">🟢</span>
+        <div class="metric-val" id="metric-published-forms">0</div>
+        <div class="metric-label">Published / Active</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">✏️</span>
+        <div class="metric-val" id="metric-draft-forms">0</div>
+        <div class="metric-label">Drafts in Progress</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">👥</span>
+        <div class="metric-val" id="metric-total-responses">0</div>
+        <div class="metric-label">Total Submissions</div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-icon">📈</span>
+        <div class="metric-val" id="metric-avg-score">0%</div>
+        <div class="metric-label">Overall Average Score</div>
+      </div>
+    </section>
+
+    <!-- Forms Management Section -->
+    <section class="forms-management-section">
+      <div class="section-title-row">
+        <div>
+          <h2>Your Forms & Assessments</h2>
+          <p class="text-muted">Manage, edit, share, and review results for your assessments.</p>
+        </div>
+
+        <div class="dashboard-filters">
+          <input type="text" class="form-input form-input-sm" placeholder="Search forms..." 
+            oninput="App.handleSearch(this.value)" style="width: 200px;" />
+          <button class="filter-pill active" data-filter="all" onclick="App.setFilter('all')">All</button>
+          <button class="filter-pill" data-filter="published" onclick="App.setFilter('published')">Published</button>
+          <button class="filter-pill" data-filter="draft" onclick="App.setFilter('draft')">Drafts</button>
+          <button class="filter-pill" data-filter="closed" onclick="App.setFilter('closed')">Closed</button>
+        </div>
+      </div>
+
+      <!-- Forms Grid -->
+      <div class="forms-grid" id="forms-grid">
+        <!-- Rendered via js/app.js -->
+      </div>
+    </section>
+
+    <!-- Starter Templates Showcase -->
+    <section class="templates-section" style="margin-top: 3.5rem;">
+      <div class="section-title-row">
+        <div>
+          <h2>Starter Assessment Templates</h2>
+          <p class="text-muted">Jumpstart your assessment creation with professional pre-built forms.</p>
+        </div>
+      </div>
+
+      <div class="templates-showcase-grid" id="templates-container">
+        <!-- Rendered via js/app.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- FormForge Scripts -->
+  <script src="js/supabase.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/importer.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/builder.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.FormForgeSupabase) FormForgeSupabase.init();
+      App.init();
+
+      // Register Service Worker for offline capability
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js').catch(err => console.log('SW registration note:', err));
+      }
+    });
+  </script>
+</body>
+</html>

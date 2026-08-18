@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assessment — FormForge</title>
+  <meta name="description" content="Take your online timed examination or assessment questionnaire." />
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/responder.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body class="responder-mode">
+
+  <!-- Root mount point for responder app -->
+  <div id="responder-app">
+    <div class="empty-state-card" style="margin: 4rem auto; max-width: 500px; text-align: center;">
+      <h2>Loading Assessment...</h2>
+      <p class="text-muted">Preparing question items and initializing storage...</p>
+    </div>
+  </div>
+
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- FormForge Scripts -->
+  <script src="js/supabase.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/responder.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.FormForgeSupabase) FormForgeSupabase.init();
+      Responder.init();
+    });
+  </script>
+</body>
+</html>

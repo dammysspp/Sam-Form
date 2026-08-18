@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assessment Analytics & Responses — FormForge</title>
+  <meta name="description" content="Detailed response breakdown, analytics charts, and scores for your FormForge assessments." />
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/results.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- Main root container for results application -->
+  <div id="results-app">
+    <div class="empty-state-card" style="margin: 4rem auto; max-width: 500px; text-align: center;">
+      <h2>Loading Responses...</h2>
+      <p class="text-muted">Aggregating submission records and calculating metrics...</p>
+    </div>
+  </div>
+
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- FormForge Scripts -->
+  <script src="js/supabase.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/results.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.FormForgeSupabase) FormForgeSupabase.init();
+      Results.init();
+    });
+  </script>
+</body>
+</html>

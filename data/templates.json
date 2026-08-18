@@ -1,0 +1,480 @@
+[
+  {
+    "id": "tpl-quiz-gk",
+    "title": "General Knowledge Assessment",
+    "description": "Test your general knowledge across science, geography, history, and technology.",
+    "category": "Quiz",
+    "theme": "indigo",
+    "mode": "exam",
+    "timeLimit": 15,
+    "passingScore": 60,
+    "sections": [
+      {
+        "id": "sec-1",
+        "title": "Science & Nature",
+        "description": "Answer the following fundamental science questions."
+      },
+      {
+        "id": "sec-2",
+        "title": "Geography & Technology",
+        "description": "Global knowledge and computer technology questions."
+      }
+    ],
+    "questions": [
+      {
+        "id": "q-1",
+        "sectionId": "sec-1",
+        "type": "multiple_choice",
+        "question": "Which planet in our solar system is known as the 'Red Planet'?",
+        "options": ["Venus", "Mars", "Jupiter", "Saturn"],
+        "answer": "Mars",
+        "points": 2,
+        "required": true,
+        "explanation": "Mars appears reddish due to iron oxide (rust) on its surface."
+      },
+      {
+        "id": "q-2",
+        "sectionId": "sec-1",
+        "type": "checkboxes",
+        "question": "Which of the following are noble gases? (Select all that apply)",
+        "options": ["Helium", "Neon", "Oxygen", "Argon", "Nitrogen"],
+        "answer": ["Helium", "Neon", "Argon"],
+        "points": 3,
+        "required": true,
+        "explanation": "Helium, Neon, and Argon belong to Group 18 (noble gases)."
+      },
+      {
+        "id": "q-3",
+        "sectionId": "sec-1",
+        "type": "linear_scale",
+        "question": "How would you rate your confidence in scientific problem solving?",
+        "scaleMin": 1,
+        "scaleMax": 5,
+        "minLabel": "Beginner",
+        "maxLabel": "Expert",
+        "points": 1,
+        "required": false
+      },
+      {
+        "id": "q-4",
+        "sectionId": "sec-2",
+        "type": "dropdown",
+        "question": "What is the capital city of Australia?",
+        "options": ["Sydney", "Melbourne", "Canberra", "Brisbane", "Perth"],
+        "answer": "Canberra",
+        "points": 2,
+        "required": true,
+        "explanation": "Canberra was selected as the compromise capital between Sydney and Melbourne."
+      },
+      {
+        "id": "q-5",
+        "sectionId": "sec-2",
+        "type": "ranking",
+        "question": "Rank these storage units from smallest to largest capacity:",
+        "options": ["Kilobyte (KB)", "Megabyte (MB)", "Gigabyte (GB)", "Terabyte (TB)"],
+        "answer": ["Kilobyte (KB)", "Megabyte (MB)", "Gigabyte (GB)", "Terabyte (TB)"],
+        "points": 3,
+        "required": true
+      }
+    ],
+    "settings": {
+      "enableTimer": true,
+      "randomizeQuestions": true,
+      "randomizeOptions": true,
+      "negativeMarking": 0,
+      "showStudyFeedback": false,
+      "remarks": [
+        {"min": 90, "max": 100, "text": "Outstanding! Exceptional mastery demonstrated."},
+        {"min": 75, "max": 89, "text": "Very Good! Strong general knowledge foundation."},
+        {"min": 60, "max": 74, "text": "Passed. Good effort, brush up on a few topics."},
+        {"min": 0, "max": 59, "text": "Needs Improvement. Review key concepts and try again."}
+      ]
+    }
+  },
+  {
+    "id": "tpl-exam-cs",
+    "title": "Computer Science & Web Architecture Exam",
+    "description": "Comprehensive assessment covering algorithms, networking, and modern web application design.",
+    "category": "Examination",
+    "theme": "slate",
+    "mode": "exam",
+    "timeLimit": 30,
+    "passingScore": 70,
+    "sections": [
+      {
+        "id": "sec-cs-1",
+        "title": "Data Structures & Performance",
+        "description": "Complexity and algorithmic foundations."
+      },
+      {
+        "id": "sec-cs-2",
+        "title": "Web Architecture & Protocols",
+        "description": "HTTP, browser storage, and security mechanisms."
+      }
+    ],
+    "questions": [
+      {
+        "id": "q-cs-1",
+        "sectionId": "sec-cs-1",
+        "type": "multiple_choice",
+        "question": "What is the average time complexity of searching in a balanced Binary Search Tree (BST)?",
+        "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+        "answer": "O(log n)",
+        "points": 5,
+        "required": true
+      },
+      {
+        "id": "q-cs-2",
+        "sectionId": "sec-cs-1",
+        "type": "checkboxes",
+        "question": "Which of the following browser storage APIs are asynchronous?",
+        "options": ["IndexedDB", "localStorage", "sessionStorage", "Cache API"],
+        "answer": ["IndexedDB", "Cache API"],
+        "points": 5,
+        "required": true
+      },
+      {
+        "id": "q-cs-3",
+        "sectionId": "sec-cs-2",
+        "type": "short_answer",
+        "question": "What HTTP status code represents '404 Not Found' vs '401'?",
+        "answer": "401 Unauthorized",
+        "points": 4,
+        "required": true
+      },
+      {
+        "id": "q-cs-4",
+        "sectionId": "sec-cs-2",
+        "type": "matrix",
+        "question": "Evaluate the persistence characteristics of the following storage mechanisms:",
+        "matrixRows": ["localStorage", "sessionStorage", "IndexedDB", "Cookies"],
+        "matrixColumns": ["Tab Lifespan", "Domain Persistent", "Structured DB", "Sent in Headers"],
+        "points": 6,
+        "required": true
+      }
+    ],
+    "settings": {
+      "enableTimer": true,
+      "randomizeQuestions": false,
+      "randomizeOptions": true,
+      "negativeMarking": 1,
+      "showStudyFeedback": false
+    }
+  },
+  {
+    "id": "tpl-feedback-product",
+    "title": "Customer Product Experience Survey",
+    "description": "Help us improve FormForge by sharing your feedback on usability, features, and performance.",
+    "category": "Feedback",
+    "theme": "emerald",
+    "mode": "survey",
+    "sections": [
+      {
+        "id": "sec-fb-1",
+        "title": "User Experience & Usability",
+        "description": "Your impressions of navigation and speed."
+      }
+    ],
+    "questions": [
+      {
+        "id": "q-fb-1",
+        "sectionId": "sec-fb-1",
+        "type": "rating",
+        "question": "How would you rate the overall speed and responsiveness of the application?",
+        "maxRating": 5,
+        "required": true
+      },
+      {
+        "id": "q-fb-2",
+        "sectionId": "sec-fb-1",
+        "type": "linear_scale",
+        "question": "How intuitive was the question builder and drag-and-drop workflow?",
+        "scaleMin": 1,
+        "scaleMax": 10,
+        "minLabel": "Difficult",
+        "maxLabel": "Effortless",
+        "required": true
+      },
+      {
+        "id": "q-fb-3",
+        "sectionId": "sec-fb-1",
+        "type": "paragraph",
+        "question": "What specific features or improvements would you like to see next?",
+        "placeholder": "Type your suggestions here...",
+        "required": false
+      }
+    ],
+    "settings": {
+      "enableTimer": false
+    }
+  },
+  {
+    "id": "tpl-reg-event",
+    "title": "Developer Summit 2026 Registration",
+    "description": "Register your attendance for workshops, keynotes, and networking events.",
+    "category": "Registration",
+    "theme": "rose",
+    "mode": "survey",
+    "sections": [
+      {
+        "id": "sec-reg-1",
+        "title": "Attendee Details",
+        "description": "Personal and contact information."
+      },
+      {
+        "id": "sec-reg-2",
+        "title": "Workshop Track Selection",
+        "description": "Select your preferred learning tracks."
+      }
+    ],
+    "questions": [
+      {
+        "id": "q-reg-1",
+        "sectionId": "sec-reg-1",
+        "type": "short_answer",
+        "question": "Full Name",
+        "required": true
+      },
+      {
+        "id": "q-reg-2",
+        "sectionId": "sec-reg-1",
+        "type": "email",
+        "question": "Work / Personal Email",
+        "required": true
+      },
+      {
+        "id": "q-reg-3",
+        "sectionId": "sec-reg-1",
+        "type": "phone",
+        "question": "Contact Phone Number",
+        "required": false
+      },
+      {
+        "id": "q-reg-4",
+        "sectionId": "sec-reg-2",
+        "type": "dropdown",
+        "question": "Primary Workshop Track",
+        "options": ["Frontend Architecture & Web Standards", "Cloud Native & Edge Computing", "AI & Machine Learning Systems", "Cybersecurity & Cryptography"],
+        "required": true
+      }
+    ],
+    "settings": {
+      "enableTimer": false
+    }
+  },
+  {
+    "id": "tpl-bible-study",
+    "title": "Bible Study Quarterly Assessment",
+    "description": "19-question assessment covering Lessons 40 to 51 on biblical history, stewardship, and eschatology.",
+    "category": "Examination",
+    "theme": "indigo",
+    "mode": "exam",
+    "timeLimit": 30,
+    "passingScore": 70,
+    "sections": [
+      {
+        "id": "sec-1",
+        "title": "Biblical Characters & God's Timing (Lessons 40–42)",
+        "description": "Questions on Mordecai, John the Beloved, and divine timing."
+      },
+      {
+        "id": "sec-2",
+        "title": "Stewardship & Missions (Lessons 44–47)",
+        "description": "Questions on occupying till He comes, diversity in missions, and restoring wounded soldiers."
+      },
+      {
+        "id": "sec-3",
+        "title": "Eschatology & Final Reflection (Lessons 49–51)",
+        "description": "Questions on the Book of Life, Resurrections, Second Death, and personal reflection."
+      }
+    ],
+    "questions": [
+      {
+        "id": "q_bs_1",
+        "sectionId": "sec-1",
+        "type": "multiple_choice",
+        "question": "In lesson 40, Mordecai, Mordecai was of the tribe of ________",
+        "options": ["Levi", "Gad", "Benjamin", "Dan"],
+        "answer": "Benjamin",
+        "points": 1,
+        "required": true,
+        "explanation": "Mordecai was a Benjamite, son of Jair, son of Shimei, son of Kish (Esther 2:5)."
+      },
+      {
+        "id": "q_bs_2",
+        "sectionId": "sec-1",
+        "type": "multiple_choice",
+        "question": "One of the characters of Mordecai is ____________",
+        "options": ["selfish", "principled", "greedy", "fearful"],
+        "answer": "principled",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_3",
+        "sectionId": "sec-1",
+        "type": "short_answer",
+        "question": "In lesson 41, \"John the Beloved\", Jesus nicknamed John and his brother James, \"Boanerges\" which means Sons of ________",
+        "answer": "Thunder",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_4",
+        "sectionId": "sec-1",
+        "type": "multiple_choice",
+        "question": "According to Acts 3:1-3, John the Beloved was with ________ at the healing of the lame man in the temple.",
+        "options": ["Matthew", "Luke", "Timothy", "Peter"],
+        "answer": "Peter",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_5",
+        "sectionId": "sec-1",
+        "type": "multiple_choice",
+        "question": "According to Lesson 42, \"God’s Timing\", where was this memory verse taken from? \"He hath made everything beautiful in His time also he hath set the world in their heart, so that no man can find out the work that God maketh from the beginning to the end\"",
+        "options": ["Ecclesiastes 4:12", "Proverbs 4:7", "Ecclesiastes 3:11", "Proverbs 3:5"],
+        "answer": "Ecclesiastes 3:11",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_6",
+        "sectionId": "sec-1",
+        "type": "multiple_choice",
+        "question": "According to John 11:21-23, God's timing is never ________ and it is never ________.",
+        "options": ["dull/bright", "fast/slow", "early/late", "good/bad"],
+        "answer": "early/late",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_7",
+        "sectionId": "sec-2",
+        "type": "short_answer",
+        "question": "According to Hosea 4:6, one of the golden rules of investment is ________",
+        "answer": "Knowledge",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_8",
+        "sectionId": "sec-2",
+        "type": "multiple_choice",
+        "question": "In lesson 44, \"Occupy till I come\", the pound represents whatever God gives to man to make him fulfil his purpose in life. This statement is:",
+        "options": ["False", "True"],
+        "answer": "True",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_9",
+        "sectionId": "sec-2",
+        "type": "short_answer",
+        "question": "________ is an example of a biblical character that spent his pound. (Write the name of one person in the bible)",
+        "answer": "Prodigal Son",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_10",
+        "sectionId": "sec-2",
+        "type": "short_answer",
+        "question": "According to Luke 19:20-21, ________ is one of the reasons why people keep the pound.",
+        "answer": "Fear",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_11",
+        "sectionId": "sec-2",
+        "type": "multiple_choice",
+        "question": "In lesson 46, \"Missions: Navigating diversity\", our memory verse, \"And he said unto them, Go ye into all the world, and preach the gospel to every creature\" was taken from:",
+        "options": ["Mark 16:16", "Matthew 28:20", "Mark 16:15", "Matthew 16:16"],
+        "answer": "Mark 16:15",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_12",
+        "sectionId": "sec-2",
+        "type": "short_answer",
+        "question": "To keep the pound means to ________",
+        "answer": "hide it",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_13",
+        "sectionId": "sec-2",
+        "type": "short_answer",
+        "question": "According to Lesson 47, \"The Wounded soldier\", one of the ways to restore the wounded soldier is by building a strong ________ system.",
+        "answer": "support",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_14",
+        "sectionId": "sec-3",
+        "type": "short_answer",
+        "question": "The word Armageddon comes from a ________ word \"Har-Magedone\".",
+        "answer": "Hebrew",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_15",
+        "sectionId": "sec-3",
+        "type": "multiple_choice",
+        "question": "In lesson 49, \"The Book of Life\", the scripture establishes that there are Books and there is the Book which is the Book of life. Is this statement true or false?",
+        "options": ["True", "False"],
+        "answer": "True",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_16",
+        "sectionId": "sec-3",
+        "type": "short_answer",
+        "question": "According to Lesson 50, \"The Resurrection\", the Book of Revelation 20:4-6 mentions a ________ Resurrection.",
+        "answer": "First",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_17",
+        "sectionId": "sec-3",
+        "type": "short_answer",
+        "question": "The second Resurrection is the Resurrection of those who ________ Jesus as their Savior.",
+        "answer": "rejected",
+        "points": 1,
+        "required": true
+      },
+      {
+        "id": "q_bs_18",
+        "sectionId": "sec-3",
+        "type": "paragraph",
+        "question": "In Lesson 51, \"The Second Death\", the book of Revelation 21:8 listed the group of people who will partake in the second death. List 2 types of persons in this category.",
+        "answer": "fearful, unbelieving, abominable, murderers, whoremongers, sorcerers, idolaters, liars",
+        "points": 2,
+        "required": true
+      },
+      {
+        "id": "q_bs_19",
+        "sectionId": "sec-3",
+        "type": "paragraph",
+        "question": "Which of the lessons in this quarter challenged you the most and why?",
+        "points": 1,
+        "required": false
+      }
+    ],
+    "settings": {
+      "enableTimer": true,
+      "randomizeQuestions": false,
+      "randomizeOptions": true,
+      "negativeMarking": 0,
+      "showStudyFeedback": false
+    }
+  }
+]
