@@ -398,12 +398,34 @@ class FormResults {
     const questions = this.form.questions || [];
     const manualGrades = resp.manualGrades || {};
 
+    document.body.classList.add('review-modal-open');
+
+    // Remove any existing rotate prompt
+    const existingPrompt = document.getElementById('landscape_rotate_prompt');
+    if (existingPrompt) existingPrompt.remove();
+
+    // Landscape Enforcement Banner for mobile devices in portrait
+    const rotateOverlay = document.createElement('div');
+    rotateOverlay.className = 'landscape-rotate-prompt';
+    rotateOverlay.id = 'landscape_rotate_prompt';
+    rotateOverlay.innerHTML = `
+      <div class="rotate-phone-icon">📱 ➔ 📲</div>
+      <div class="rotate-prompt-title">Rotate Device to Landscape</div>
+      <p class="rotate-prompt-desc">
+        To review responses, grade written answers, and view detailed statistics, please turn your phone horizontally.
+      </p>
+      <button type="button" class="btn-bypass-landscape" onclick="Results.closeInspector()">
+        ✕ Close & Return to Table
+      </button>
+    `;
+    document.body.appendChild(rotateOverlay);
+
     const modal = document.createElement('div');
     modal.className = 'modal-backdrop';
     modal.id = `inspect_modal_${resp.id}`;
     modal.innerHTML = `
-      <div class="modal-card modal-lg" style="max-width:850px;">
-        <div class="modal-header" style="padding:1.25rem 1.5rem; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-color);">
+      <div class="modal-card modal-lg" style="max-width:900px; width:95vw;">
+        <div class="modal-header" style="padding:1rem 1.5rem; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-color);">
           <div style="min-width:0; flex:1;">
             <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
               <h3 class="modal-title" style="margin:0; font-size:1.2rem;">${Utils.escapeHTML(resp.respondentName || 'Candidate')}</h3>
@@ -414,10 +436,10 @@ class FormResults {
               Submitted on ${Utils.formatDate(resp.submittedAt)} • Duration: ${Utils.formatTime(resp.durationSeconds)}
             </small>
           </div>
-          <button class="btn-icon" onclick="this.closest('.modal-backdrop').remove()" style="font-size:1.2rem; align-self:flex-start;">✕</button>
+          <button class="btn-icon" onclick="Results.closeInspector()" style="font-size:1.2rem; align-self:flex-start;">✕</button>
         </div>
 
-        <div class="modal-body" style="padding:1.5rem; max-height:75vh; overflow-y:auto;">
+        <div class="modal-body" style="padding:1.25rem 1.5rem; max-height:78vh; overflow-y:auto;">
           <!-- Modern High-Contrast Score KPI Header -->
           <div class="inspect-score-summary">
             <div class="inspect-kpi">
@@ -512,12 +534,19 @@ class FormResults {
           </div>
         </div>
         <div class="modal-footer" style="padding:1rem 1.5rem; background:var(--bg-surface-subtle); border-top:1px solid var(--border-color);">
-          <button class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">Close</button>
+          <button class="btn btn-secondary" onclick="Results.closeInspector()">Close</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
+  }
+
+  closeInspector() {
+    document.body.classList.remove('review-modal-open');
+    const prompt = document.getElementById('landscape_rotate_prompt');
+    if (prompt) prompt.remove();
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.remove());
   }
 
   async quickMark(responseId, qid, earnedPoints, defaultComment) {
