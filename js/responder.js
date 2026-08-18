@@ -442,7 +442,18 @@ class FormResponder {
   // --- ANSWER HANDLERS ---
   handleAnswerChange(qid, value) {
     this.answers[qid] = value;
-    // Do not call full re-render on text input typing so input focus is never lost!
+    
+    // Immediately update radio card visual styles without reloading the DOM
+    const cardEl = document.getElementById(`resp_card_${qid}`);
+    if (cardEl) {
+      cardEl.querySelectorAll('.responder-option-card').forEach(card => {
+        const input = card.querySelector('input[type="radio"]');
+        if (input) {
+          card.classList.toggle('selected', input.value === value);
+        }
+      });
+    }
+
     this.onAnswerRecorded(qid, false);
   }
 
@@ -455,7 +466,19 @@ class FormResponder {
     } else {
       this.answers[qid] = this.answers[qid].filter(v => v !== optionValue);
     }
-    this.onAnswerRecorded(qid, true);
+
+    // Immediately update checkbox card visual styles without reloading the DOM
+    const cardEl = document.getElementById(`resp_card_${qid}`);
+    if (cardEl) {
+      cardEl.querySelectorAll('.responder-option-card').forEach(card => {
+        const input = card.querySelector('input[type="checkbox"]');
+        if (input) {
+          card.classList.toggle('selected', this.answers[qid].includes(input.value));
+        }
+      });
+    }
+
+    this.onAnswerRecorded(qid, false);
   }
 
   handleMultiSelectChange(qid, selectEl) {
