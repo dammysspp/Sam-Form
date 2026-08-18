@@ -72,6 +72,7 @@
   <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- FormForge Scripts -->
+  <script src="js/auth.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/utils.js"></script>
@@ -84,6 +85,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Enforce Admin Authentication
+      if (!FormForgeAuth.guard()) return;
+
       if (window.FormForgeSupabase) FormForgeSupabase.init();
       Builder.init();
     });

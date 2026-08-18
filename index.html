@@ -36,6 +36,9 @@
         <a href="builder.html" class="btn btn-primary">
           + Create New Form
         </a>
+        <button class="btn btn-outline btn-sm" onclick="FormForgeAuth.logout()" title="Sign Out Admin" style="margin-left: 0.5rem;">
+          🚪 Sign Out
+        </button>
       </div>
     </div>
   </nav>
@@ -115,6 +118,7 @@
   <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- FormForge Scripts -->
+  <script src="js/auth.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/utils.js"></script>
@@ -127,6 +131,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Enforce Admin Authentication
+      if (!FormForgeAuth.guard()) return;
+
       if (window.FormForgeSupabase) FormForgeSupabase.init();
       App.init();
 
