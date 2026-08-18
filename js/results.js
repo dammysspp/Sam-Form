@@ -402,25 +402,39 @@ class FormResults {
     modal.className = 'modal-backdrop';
     modal.id = `inspect_modal_${resp.id}`;
     modal.innerHTML = `
-      <div class="modal-card modal-lg">
-        <div class="modal-header">
-          <div>
-            <h3 class="modal-title">Response & Grading: ${Utils.escapeHTML(resp.respondentName || 'Candidate')}</h3>
-            <small class="text-muted">
-              Submitted ${Utils.formatDate(resp.submittedAt)} • Time: ${Utils.formatTime(resp.durationSeconds)} 
-              ${resp.respondentId ? `• Candidate ID: <strong>${Utils.escapeHTML(resp.respondentId)}</strong>` : ''}
+      <div class="modal-card modal-lg" style="max-width:850px;">
+        <div class="modal-header" style="padding:1.25rem 1.5rem; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-color);">
+          <div style="min-width:0; flex:1;">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
+              <h3 class="modal-title" style="margin:0; font-size:1.2rem;">${Utils.escapeHTML(resp.respondentName || 'Candidate')}</h3>
+              ${resp.respondentId && resp.respondentId !== 'N/A' ? `<span class="badge" style="background:#e0e7ff; color:#3730a3; font-size:0.75rem;">ID: ${Utils.escapeHTML(resp.respondentId)}</span>` : ''}
+              ${resp.respondentEmail && resp.respondentEmail !== 'N/A' ? `<span class="text-muted" style="font-size:0.8rem;">(${Utils.escapeHTML(resp.respondentEmail)})</span>` : ''}
+            </div>
+            <small class="text-muted" style="display:block; font-size:0.78rem;">
+              Submitted on ${Utils.formatDate(resp.submittedAt)} • Duration: ${Utils.formatTime(resp.durationSeconds)}
             </small>
           </div>
-          <button class="btn-icon" onclick="this.closest('.modal-backdrop').remove()">✕</button>
+          <button class="btn-icon" onclick="this.closest('.modal-backdrop').remove()" style="font-size:1.2rem; align-self:flex-start;">✕</button>
         </div>
-        <div class="modal-body">
+
+        <div class="modal-body" style="padding:1.5rem; max-height:75vh; overflow-y:auto;">
+          <!-- Modern High-Contrast Score KPI Header -->
           <div class="inspect-score-summary">
-            <div class="inspect-kpi"><strong>${scoring.score || 0} / ${scoring.maxScore || 0}</strong><span>Total Score</span></div>
-            <div class="inspect-kpi"><strong>${scoring.percentage || 0}%</strong><span>Percentage</span></div>
-            <div class="inspect-kpi"><strong>${scoring.grade || 'PENDING'}</strong><span>Grade</span></div>
             <div class="inspect-kpi">
-              <strong>${scoring.isFullyGraded ? (scoring.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING REVIEW ⏳'}</strong>
-              <span>Grading Status</span>
+              <strong>${scoring.score || 0} / ${scoring.maxScore || 0}</strong>
+              <span>Total Score</span>
+            </div>
+            <div class="inspect-kpi">
+              <strong>${scoring.percentage || 0}%</strong>
+              <span>Percentage</span>
+            </div>
+            <div class="inspect-kpi">
+              <strong>${scoring.grade || 'PENDING'}</strong>
+              <span>Grade</span>
+            </div>
+            <div class="inspect-kpi">
+              <strong style="font-size:1.05rem;">${scoring.isFullyGraded ? (scoring.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING ⏳'}</strong>
+              <span>Status</span>
             </div>
           </div>
 
@@ -429,17 +443,20 @@ class FormResults {
               const evalData = breakdown[q.id] || {};
               const userAns = resp.answers[q.id];
               const qManual = manualGrades[q.id] || {};
+              const maxPts = q.points || 1;
+              const hasEarned = evalData.earnedPoints !== undefined ? evalData.earnedPoints : (qManual.earnedPoints || 0);
 
               return `
                 <div class="inspect-q-item ${evalData.needsManualReview ? 'inspect-pending-review' : evalData.isCorrect ? 'inspect-correct' : 'inspect-incorrect'}">
                   <div class="inspect-q-title-row">
                     <span><strong>Q${idx + 1}.</strong> ${Utils.escapeHTML(q.question)}</span>
-                    <span class="badge">${evalData.earnedPoints || 0} / ${q.points || 1} pts ${evalData.needsManualReview ? '(Needs Grade ⏳)' : ''}</span>
+                    <span class="badge ${evalData.isCorrect ? 'badge-correct' : 'badge-incorrect'}" style="flex-shrink:0;">
+                      ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '⏳' : ''}
+                    </span>
                   </div>
-                  <div class="inspect-q-ans">
-                    <strong>Candidate's Written Response:</strong>
-                    <div class="user-ans-box">${Utils.escapeHTML(Array.isArray(userAns) ? userAns.join(', ') : (userAns !== undefined && userAns !== null && userAns !== '' ? (typeof userAns === 'object' ? JSON.stringify(userAns) : String(userAns)) : '<No Answer Provided>'))}</div>
-                  </div>
+
+                  <div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:0.25rem;">Candidate's Answer:</div>
+                  <div class="user-ans-box">${Utils.escapeHTML(Array.isArray(userAns) ? userAns.join(', ') : (userAns !== undefined && userAns !== null && userAns !== '' ? (typeof userAns === 'object' ? JSON.stringify(userAns) : String(userAns)) : '<No Answer Provided>'))}</div>
 
                   ${q.answer ? `
                     <div class="inspect-q-correct text-success">
@@ -447,22 +464,22 @@ class FormResults {
                     </div>
                   ` : ''}
 
-                  <!-- Manual Examiner Grading Controls -->
+                  <!-- Manual Examiner Grading Panel -->
                   <div class="manual-grading-panel">
                     <div class="manual-grading-header">
-                      <strong>✏️ Examiner Manual Grading & Remarks</strong>
-                      ${qManual.gradedAt ? `<small class="text-success font-weight-bold">✓ Graded on ${Utils.formatDate(qManual.gradedAt)}</small>` : '<small class="text-muted">Awaiting examiner evaluation</small>'}
+                      <span><strong>✏️ Examiner Evaluation & Marks</strong></span>
+                      ${qManual.gradedAt ? `<span class="text-success font-weight-bold" style="font-size:0.75rem;">✓ Graded on ${Utils.formatDate(qManual.gradedAt)}</span>` : '<span class="text-muted" style="font-size:0.75rem;">Awaiting review</span>'}
                     </div>
 
-                    <div class="manual-quick-btn-row" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+                    <div class="manual-quick-btn-row">
                       <button type="button" class="btn btn-sm btn-success" 
-                        onclick="Results.quickMark('${resp.id}', '${q.id}', ${q.points || 1}, 'Correct')">
-                        ✓ Correct (+${q.points || 1} pts)
+                        onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Correct')">
+                        ✓ Correct (+${maxPts} pts)
                       </button>
-                      ${(q.points || 1) > 1 ? `
+                      ${maxPts > 1 ? `
                         <button type="button" class="btn btn-sm btn-secondary" 
-                          onclick="Results.quickMark('${resp.id}', '${q.id}', ${(q.points || 1) / 2}, 'Partial Credit')">
-                          ½ Partial (+${(q.points || 1) / 2} pts)
+                          onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Partial Credit')">
+                          ½ Partial (+${maxPts / 2} pts)
                         </button>
                       ` : ''}
                       <button type="button" class="btn btn-sm btn-danger" 
@@ -473,20 +490,20 @@ class FormResults {
 
                     <div class="manual-grading-controls">
                       <div class="points-input-wrap">
-                        <label class="form-label-sm">Custom Marks (0 to ${q.points || 1}):</label>
-                        <input type="number" min="0" max="${q.points || 100}" step="0.5" 
+                        <label class="form-label-sm">Custom Mark (0 to ${maxPts}):</label>
+                        <input type="number" min="0" max="${maxPts}" step="0.5" 
                           id="manual_pts_${q.id}" 
                           class="form-input form-input-sm" 
-                          value="${qManual.earnedPoints !== undefined ? qManual.earnedPoints : (evalData.earnedPoints || 0)}" style="width:100px;" />
+                          value="${qManual.earnedPoints !== undefined ? qManual.earnedPoints : (evalData.earnedPoints || 0)}" style="width:110px;" />
                       </div>
-                      <div class="comments-input-wrap" style="flex:1;">
-                        <label class="form-label-sm">Examiner Notes / Feedback:</label>
+                      <div class="comments-input-wrap">
+                        <label class="form-label-sm">Feedback / Notes to Candidate:</label>
                         <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" 
-                          placeholder="Feedback or explanation to candidate..." 
+                          placeholder="Optional feedback..." 
                           value="${Utils.escapeHTML(qManual.comment || '')}" />
                       </div>
-                      <button type="button" class="btn btn-sm btn-primary" style="align-self:flex-end;"
-                        onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save Custom Mark</button>
+                      <button type="button" class="btn btn-sm btn-primary"
+                        onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save</button>
                     </div>
                   </div>
                 </div>
@@ -494,7 +511,7 @@ class FormResults {
             }).join('')}
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" style="padding:1rem 1.5rem; background:var(--bg-surface-subtle); border-top:1px solid var(--border-color);">
           <button class="btn btn-secondary" onclick="this.closest('.modal-backdrop').remove()">Close</button>
         </div>
       </div>
