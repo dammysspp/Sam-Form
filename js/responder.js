@@ -442,7 +442,8 @@ class FormResponder {
   // --- ANSWER HANDLERS ---
   handleAnswerChange(qid, value) {
     this.answers[qid] = value;
-    this.onAnswerRecorded(qid);
+    // Do not call full re-render on text input typing so input focus is never lost!
+    this.onAnswerRecorded(qid, false);
   }
 
   handleCheckboxChange(qid, optionValue, isChecked) {
@@ -454,13 +455,13 @@ class FormResponder {
     } else {
       this.answers[qid] = this.answers[qid].filter(v => v !== optionValue);
     }
-    this.onAnswerRecorded(qid);
+    this.onAnswerRecorded(qid, true);
   }
 
   handleMultiSelectChange(qid, selectEl) {
     const selected = Array.from(selectEl.selectedOptions).map(opt => opt.value);
     this.answers[qid] = selected;
-    this.onAnswerRecorded(qid);
+    this.onAnswerRecorded(qid, true);
   }
 
   handleMatrixChange(qid, rowKey, colValue) {
@@ -468,7 +469,7 @@ class FormResponder {
       this.answers[qid] = {};
     }
     this.answers[qid][rowKey] = colValue;
-    this.onAnswerRecorded(qid);
+    this.onAnswerRecorded(qid, true);
   }
 
   moveRankingItem(qid, itemIdx, direction) {
@@ -482,7 +483,7 @@ class FormResponder {
       items[itemIdx] = items[targetIdx];
       items[targetIdx] = temp;
       this.answers[qid] = items;
-      this.onAnswerRecorded(qid);
+      this.onAnswerRecorded(qid, true);
       this.render();
     }
   }
@@ -503,7 +504,7 @@ class FormResponder {
     this.render();
   }
 
-  onAnswerRecorded(qid) {
+  onAnswerRecorded(qid, shouldReRender = false) {
     // If Quiz/Study mode: compute instant feedback
     if (this.form.mode === 'study') {
       const q = this.orderedQuestions.find(item => item.id === qid);
@@ -512,7 +513,9 @@ class FormResponder {
         this.studyFeedback[qid] = evalResult;
       }
     }
-    this.render();
+    if (shouldReRender) {
+      this.render();
+    }
   }
 
   // --- SECTION NAVIGATION & CONDITIONAL BRANCHING ---
