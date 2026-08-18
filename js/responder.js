@@ -31,7 +31,7 @@ class FormResponder {
     this.form = await DB.getFormById(formId);
 
     if (!this.form) {
-      this.renderError('Assessment or form could not be found in local storage.');
+      this.renderError('Assessment or form could not be found in storage.');
       return;
     }
 
@@ -63,8 +63,114 @@ class FormResponder {
     if (draft && draft.data && !this.isPreview) {
       this.promptResumeDraft(draft.data);
     } else {
-      this.startAssessment();
+      // Show clean "About this Quiz / Exam" landing page before starting
+      this.renderIntroScreen();
     }
+  }
+
+  // --- WELCOME / ABOUT THIS ASSESSMENT SCREEN ---
+  renderIntroScreen() {
+    const root = document.getElementById('responder-app');
+    if (!root) return;
+
+    const qCount = this.orderedQuestions.length;
+    const totalPoints = this.orderedQuestions.reduce((sum, q) => sum + (parseFloat(q.points) || 1), 0);
+    const timeLimitText = this.form.timeLimit > 0 ? `${this.form.timeLimit} Minutes` : 'Untimed';
+    const passScore = this.form.passingScore || 50;
+    const mode = (this.form.mode || 'exam').toUpperCase();
+
+    root.innerHTML = `
+      ${this.isPreview ? '<div class="preview-mode-banner">👁 PREVIEW MODE — Submissions will not affect real response statistics</div>' : ''}
+
+      <div class="assessment-intro-container">
+        <div class="assessment-intro-card">
+          <!-- Hero Header -->
+          <div class="intro-hero-banner">
+            <div class="intro-badge-row">
+              <span class="badge badge-outline" style="color:#fff; border-color:rgba(255,255,255,0.4);">${mode}</span>
+              ${this.form.timeLimit > 0 ? `<span class="badge badge-outline" style="color:#fff; border-color:rgba(255,255,255,0.4);">⏱ ${timeLimitText}</span>` : ''}
+            </div>
+            <h1 class="intro-hero-title">${Utils.escapeHTML(this.form.title)}</h1>
+            ${this.form.description ? `<p class="intro-hero-desc">${Utils.escapeHTML(this.form.description)}</p>` : ''}
+          </div>
+
+          <!-- Body Specs & Guidelines -->
+          <div class="intro-body">
+            <div class="intro-spec-grid">
+              <div class="intro-spec-item">
+                <span class="spec-icon">❓</span>
+                <div class="spec-val">${qCount}</div>
+                <div class="spec-label">Questions</div>
+              </div>
+              <div class="intro-spec-item">
+                <span class="spec-icon">🎯</span>
+                <div class="spec-val">${totalPoints} pts</div>
+                <div class="spec-label">Total Marks</div>
+              </div>
+              <div class="intro-spec-item">
+                <span class="spec-icon">🏆</span>
+                <div class="spec-val">${passScore}%</div>
+                <div class="spec-label">Pass Mark</div>
+              </div>
+            </div>
+
+            <div class="intro-instructions-box">
+              <strong>📋 Assessment Instructions & Guidelines:</strong>
+              <ul>
+                ${this.form.timeLimit > 0 ? `<li>You have <strong>${this.form.timeLimit} minutes</strong> once you click Begin. The timer runs continuously in the top bar.</li>` : '<li>This assessment is untimed. Complete all questions at your own pace.</li>'}
+                <li>Your progress is auto-saved locally as you answer.</li>
+                <li>Make sure you review your answers before submitting.</li>
+              </ul>
+            </div>
+
+            <!-- Candidate Details Form -->
+            <div class="intro-candidate-form">
+              <h3 class="intro-candidate-title">👤 Candidate Information</h3>
+              <div class="grid-2-col">
+                <div>
+                  <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
+                  <input type="text" id="intro_resp_name" class="form-input" 
+                    placeholder="e.g. John Doe" value="${Utils.escapeHTML(this.respondentName)}" />
+                </div>
+                <div>
+                  <label class="form-label-sm">Email Address</label>
+                  <input type="email" id="intro_resp_email" class="form-input" 
+                    placeholder="candidate@example.com" value="${Utils.escapeHTML(this.respondentEmail)}" />
+                </div>
+              </div>
+              <div style="margin-top: 0.75rem;">
+                <label class="form-label-sm">Student / Candidate ID (Optional)</label>
+                <input type="text" id="intro_resp_id" class="form-input" 
+                  placeholder="e.g. CAND-2026-99" value="${Utils.escapeHTML(this.respondentId || '')}" />
+              </div>
+
+              <button type="button" class="btn btn-primary btn-begin-assessment" onclick="Responder.handleBeginClick()">
+                🚀 Begin Assessment Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  handleBeginClick() {
+    const nameInput = document.getElementById('intro_resp_name');
+    const emailInput = document.getElementById('intro_resp_email');
+    const idInput = document.getElementById('intro_resp_id');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    if (!name) {
+      Utils.showToast('Please enter your full name to begin', 'warning');
+      if (nameInput) nameInput.focus();
+      return;
+    }
+
+    this.respondentName = name;
+    this.respondentEmail = emailInput ? emailInput.value.trim() : '';
+    this.respondentId = idInput ? idInput.value.trim() : '';
+
+    this.startAssessment();
   }
 
   setupQuestionsOrder() {
@@ -113,6 +219,7 @@ class FormResponder {
       this.currentSectionIndex = draftData.currentSectionIndex || 0;
       this.respondentName = draftData.respondentName || '';
       this.respondentEmail = draftData.respondentEmail || '';
+      this.respondentId = draftData.respondentId || '';
       this.startTime = draftData.startTime || Date.now();
       modal.remove();
       this.startAssessment(this.startTime);
@@ -121,7 +228,7 @@ class FormResponder {
     modal.querySelector('#btn-draft-restart').onclick = async () => {
       await DB.clearDraft(this.form.id);
       modal.remove();
-      this.startAssessment();
+      this.renderIntroScreen();
     };
   }
 
@@ -245,30 +352,6 @@ class FormResponder {
               <div class="progress-fill" style="width: ${progressPercent}%;"></div>
             </div>
           </div>
-
-          <!-- Candidate Identification Card (Rendered at top of Section 1) -->
-          ${this.currentSectionIndex === 0 ? `
-            <div class="responder-question-card candidate-id-card" style="border-left: 5px solid var(--primary); margin-bottom: 1.25rem;">
-              <h3 class="resp-q-title" style="margin-bottom: 0.75rem;">👤 Respondent / Candidate Information</h3>
-              <div class="grid-2-col">
-                <div>
-                  <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
-                  <input type="text" class="form-input" value="${Utils.escapeHTML(this.respondentName)}" 
-                    placeholder="e.g. Jane Doe" oninput="Responder.respondentName = this.value" />
-                </div>
-                <div>
-                  <label class="form-label-sm">Email Address</label>
-                  <input type="email" class="form-input" value="${Utils.escapeHTML(this.respondentEmail)}" 
-                    placeholder="candidate@example.com" oninput="Responder.respondentEmail = this.value" />
-                </div>
-              </div>
-              <div style="margin-top: 0.75rem;">
-                <label class="form-label-sm">Student / Candidate ID Number (Optional)</label>
-                <input type="text" class="form-input" value="${Utils.escapeHTML(this.respondentId || '')}" 
-                  placeholder="e.g. CAND-89021" oninput="Responder.respondentId = this.value" />
-              </div>
-            </div>
-          ` : ''}
 
           <!-- Section Meta -->
           ${currentSec.description ? `

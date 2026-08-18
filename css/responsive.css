@@ -4,13 +4,70 @@
 
 /* Tablet and Mobile Optimization */
 @media (max-width: 768px) {
-  .navbar-container, .builder-topbar, .header-container, .results-header-container {
+  .navbar-container, .builder-topbar, .results-header-container {
     padding: 0.6rem 1rem;
   }
 
+  .header-container {
+    padding: 0.5rem 0.75rem;
+    gap: 0.4rem;
+  }
+
   .brand-title {
-    max-width: 220px;
-    font-size: 1rem;
+    max-width: 140px;
+    font-size: 0.88rem;
+  }
+
+  .timer-pill {
+    min-width: 70px;
+    max-width: 90px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.82rem;
+  }
+
+  .timer-pill #timer-display {
+    font-size: 0.82rem;
+    letter-spacing: -0.02em;
+  }
+
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .progress-card {
+    padding: 0.75rem 1rem;
+  }
+
+  .progress-info-row {
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .responder-question-card {
+    padding: 1.15rem;
+  }
+
+  .resp-q-title {
+    font-size: 1.02rem;
+  }
+
+  .intro-spec-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+
+  .intro-spec-item {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .spec-val {
+    font-size: 0.95rem;
+  }
+
+  .spec-label {
+    font-size: 0.68rem;
   }
 
   .builder-stats-pill {
