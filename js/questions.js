@@ -25,21 +25,21 @@ const QuestionTypes = {
 const QuestionTypeLabels = {
   short_answer: { label: 'Short Answer', icon: '—' },
   paragraph: { label: 'Paragraph', icon: '¶' },
-  multiple_choice: { label: 'Multiple Choice', icon: '◉' },
-  checkboxes: { label: 'Checkboxes', icon: '☑' },
+  multiple_choice: { label: 'Multiple Choice', icon: '○' },
+  checkboxes: { label: 'Checkboxes', icon: '□' },
   dropdown: { label: 'Dropdown', icon: '▾' },
-  multiple_dropdown: { label: 'Multiple Dropdown', icon: '▤' },
+  multiple_dropdown: { label: 'Multiple Dropdown', icon: '≡' },
   linear_scale: { label: 'Linear Scale', icon: '1-5' },
   rating: { label: 'Star Rating', icon: '★' },
-  date: { label: 'Date', icon: '📅' },
-  time: { label: 'Time', icon: '⏰' },
+  date: { label: 'Date', icon: 'cal' },
+  time: { label: 'Time', icon: 'clk' },
   number: { label: 'Number', icon: '#' },
-  email: { label: 'Email', icon: '✉' },
-  phone: { label: 'Phone Number', icon: '📞' },
-  url: { label: 'Website URL', icon: '🔗' },
-  file_upload: { label: 'File Upload', icon: '📁' },
-  matrix: { label: 'Matrix / Grid', icon: '▦' },
-  ranking: { label: 'Ranking', icon: '⇅' }
+  email: { label: 'Email', icon: '@' },
+  phone: { label: 'Phone Number', icon: 'tel' },
+  url: { label: 'Website URL', icon: 'url' },
+  file_upload: { label: 'File Upload', icon: 'doc' },
+  matrix: { label: 'Matrix / Grid', icon: 'grid' },
+  ranking: { label: 'Ranking', icon: 'list' }
 };
 
 const QuestionsEngine = {
@@ -560,7 +560,7 @@ const QuestionsEngine = {
       feedbackBannerHTML = `
         <div class="study-feedback-box ${isCorrect ? 'feedback-correct' : 'feedback-incorrect'}">
           <div class="feedback-status">
-            <span class="feedback-icon">${isCorrect ? '✓' : '✗'}</span>
+            <span class="feedback-icon" style="vertical-align:-2px;">${isCorrect ? icon('check', 16) : icon('cross', 16)}</span>
             <strong>${isCorrect ? 'Correct!' : 'Incorrect'}</strong>
             <span class="feedback-points">(${studyFeedback.earnedPoints} / ${question.points || 1} pts)</span>
           </div>
@@ -593,7 +593,7 @@ const QuestionsEngine = {
             ${question.points ? `<span class="resp-points-pill">${question.points} ${question.points === 1 ? 'pt' : 'pts'}</span>` : ''}
             <button type="button" class="btn-flag ${isFlagged ? 'active' : ''}" 
               onclick="Responder.toggleFlag('${qid}')" title="${isFlagged ? 'Unflag question' : 'Flag for review'}">
-              <span class="flag-icon">🚩</span> ${isFlagged ? 'Flagged' : 'Flag'}
+              <span class="flag-icon" style="vertical-align:-2px;">${isFlagged ? icon('flagFilled', 14) : icon('flag', 14)}</span> ${isFlagged ? 'Flagged' : 'Flag'}
             </button>
           </div>
         </div>

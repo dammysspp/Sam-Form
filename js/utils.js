@@ -256,19 +256,19 @@ const Utils = {
                 <label class="form-label-sm">Instant Social & Messaging Share</label>
                 <div class="social-share-buttons">
                   <a href="https://api.whatsapp.com/send?text=${shareText}" target="_blank" class="social-btn btn-whatsapp">
-                    <span>💬</span> WhatsApp
+                    WhatsApp
                   </a>
                   <a href="https://twitter.com/intent/tweet?text=${shareText}" target="_blank" class="social-btn btn-twitter">
-                    <span>🐦</span> Twitter / X
+                    Twitter / X
                   </a>
                   <a href="mailto:?subject=${shareTitle}&body=${shareText}" target="_blank" class="social-btn btn-email">
-                    <span>✉️</span> Email
+                    Email
                   </a>
                   <a href="https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${shareTitle}" target="_blank" class="social-btn btn-telegram">
-                    <span>✈️</span> Telegram
+                    Telegram
                   </a>
                   <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}" target="_blank" class="social-btn btn-linkedin">
-                    <span>💼</span> LinkedIn
+                    LinkedIn
                   </a>
                 </div>
               </div>
@@ -282,7 +282,9 @@ const Utils = {
               </div>
               <small class="text-muted">Respondents can scan this QR code using smartphone cameras.</small>
               <div style="margin-top: 1rem;">
-                <button class="btn btn-sm btn-outline" onclick="Utils.downloadQRSVG('${this.escapeHTML(form.title)}')">📥 Download QR Code (SVG)</button>
+                <button class="btn btn-sm btn-outline" onclick="Utils.downloadQRSVG('${this.escapeHTML(form.title)}')">
+                  <span style="vertical-align:-2px;">${icon('download', 14)}</span> Download QR Code (SVG)
+                </button>
               </div>
             </div>
           </div>

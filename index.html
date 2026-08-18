@@ -28,16 +28,16 @@
 
       <div class="nav-actions">
         <button class="btn btn-secondary" id="btn-cloud-settings" onclick="App.openCloudConfigModal()">
-          ⚡ Connect Supabase
+          <span style="vertical-align:-2px;">${icon('zap', 15)}</span> Connect Supabase
         </button>
         <button class="btn btn-secondary" onclick="App.openDashboardImport()">
-          📥 Import JSON
+          <span style="vertical-align:-2px;">${icon('download', 15)}</span> Import JSON
         </button>
         <a href="builder.html" class="btn btn-primary">
-          + Create New Form
+          <span style="vertical-align:-2px;">${icon('plus', 15)}</span> Create New Form
         </a>
         <button class="btn btn-outline btn-sm" onclick="FormForgeAuth.logout()" title="Sign Out Admin" style="margin-left: 0.5rem;">
-          🚪 Sign Out
+          <span style="vertical-align:-2px;">${icon('logOut', 14)}</span> Sign Out
         </button>
       </div>
     </div>
@@ -49,27 +49,27 @@
     <!-- Top Metrics Overview -->
     <section class="metrics-overview-grid" aria-label="Platform Statistics">
       <div class="metric-card">
-        <span class="metric-icon">📑</span>
+        <span class="metric-icon" style="color:var(--primary);">${icon('form', 24)}</span>
         <div class="metric-val" id="metric-total-forms">0</div>
         <div class="metric-label">Total Forms & Assessments</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon">🟢</span>
+        <span class="metric-icon" style="color:var(--success);">${icon('check', 24)}</span>
         <div class="metric-val" id="metric-published-forms">0</div>
         <div class="metric-label">Published / Active</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon">✏️</span>
+        <span class="metric-icon" style="color:#d97706;">${icon('edit', 24)}</span>
         <div class="metric-val" id="metric-draft-forms">0</div>
         <div class="metric-label">Drafts in Progress</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon">👥</span>
+        <span class="metric-icon" style="color:#2563eb;">${icon('users', 24)}</span>
         <div class="metric-val" id="metric-total-responses">0</div>
         <div class="metric-label">Total Submissions</div>
       </div>
       <div class="metric-card">
-        <span class="metric-icon">📈</span>
+        <span class="metric-icon" style="color:#059669;">${icon('trendingUp', 24)}</span>
         <div class="metric-val" id="metric-avg-score">0%</div>
         <div class="metric-label">Overall Average Score</div>
       </div>
@@ -118,6 +118,7 @@
   <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- FormForge Scripts -->
+  <script src="js/icons.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/storage.js"></script>

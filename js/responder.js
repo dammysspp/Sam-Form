@@ -80,7 +80,7 @@ class FormResponder {
     const mode = (this.form.mode || 'exam').toUpperCase();
 
     root.innerHTML = `
-      ${this.isPreview ? '<div class="preview-mode-banner">👁 PREVIEW MODE — Submissions will not affect real response statistics</div>' : ''}
+      ${this.isPreview ? `<div class="preview-mode-banner">${icon('eye', 14)} PREVIEW MODE — Submissions will not affect real response statistics</div>` : ''}
 
       <div class="assessment-intro-container">
         <div class="assessment-intro-card">
@@ -88,7 +88,7 @@ class FormResponder {
           <div class="intro-hero-banner">
             <div class="intro-badge-row">
               <span class="badge badge-outline" style="color:#fff; border-color:rgba(255,255,255,0.4);">${mode}</span>
-              ${this.form.timeLimit > 0 ? `<span class="badge badge-outline" style="color:#fff; border-color:rgba(255,255,255,0.4);">⏱ ${timeLimitText}</span>` : ''}
+              ${this.form.timeLimit > 0 ? `<span class="badge badge-outline" style="color:#fff; border-color:rgba(255,255,255,0.4);">${icon('clock', 13)} ${timeLimitText}</span>` : ''}
             </div>
             <h1 class="intro-hero-title">${Utils.escapeHTML(this.form.title)}</h1>
             ${this.form.description ? `<p class="intro-hero-desc">${Utils.escapeHTML(this.form.description)}</p>` : ''}
@@ -98,24 +98,24 @@ class FormResponder {
           <div class="intro-body">
             <div class="intro-spec-grid">
               <div class="intro-spec-item">
-                <span class="spec-icon">❓</span>
+                <span class="spec-icon" style="color:var(--primary);">${icon('helpCircle', 26)}</span>
                 <div class="spec-val">${qCount}</div>
                 <div class="spec-label">Questions</div>
               </div>
               <div class="intro-spec-item">
-                <span class="spec-icon">🎯</span>
+                <span class="spec-icon" style="color:#059669;">${icon('target', 26)}</span>
                 <div class="spec-val">${totalPoints} pts</div>
                 <div class="spec-label">Total Marks</div>
               </div>
               <div class="intro-spec-item">
-                <span class="spec-icon">🏆</span>
+                <span class="spec-icon" style="color:#d97706;">${icon('award', 26)}</span>
                 <div class="spec-val">${passScore}%</div>
                 <div class="spec-label">Pass Mark</div>
               </div>
             </div>
 
             <div class="intro-instructions-box">
-              <strong>📋 Assessment Instructions & Guidelines:</strong>
+              <strong>${icon('fileText', 15)} Assessment Instructions & Guidelines:</strong>
               <ul>
                 ${this.form.timeLimit > 0 ? `<li>You have <strong>${this.form.timeLimit} minutes</strong> once you click Begin. The timer runs continuously in the top bar.</li>` : '<li>This assessment is untimed. Complete all questions at your own pace.</li>'}
                 <li>Your progress is auto-saved locally as you answer.</li>
@@ -125,7 +125,7 @@ class FormResponder {
 
             <!-- Candidate Details Form -->
             <div class="intro-candidate-form">
-              <h3 class="intro-candidate-title">👤 Candidate Information</h3>
+              <h3 class="intro-candidate-title"><span style="vertical-align:-2px;">${icon('user', 18)}</span> Candidate Information</h3>
               <div class="grid-2-col">
                 <div>
                   <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
@@ -145,7 +145,7 @@ class FormResponder {
               </div>
 
               <button type="button" class="btn btn-primary btn-begin-assessment" onclick="Responder.handleBeginClick()">
-                🚀 Begin Assessment Now
+                <span style="vertical-align:-1px;">${icon('play', 14)}</span> Begin Assessment
               </button>
             </div>
           </div>
@@ -329,13 +329,15 @@ class FormResponder {
           <div class="header-status-area">
             ${this.form.settings?.enableTimer && this.form.timeLimit > 0 ? `
               <div class="timer-pill timer-normal" id="timer-pill">
-                <span id="timer-display">⏱ --:--</span>
+                <span id="timer-display"><span style="vertical-align:-2px;">${icon('clock', 14)}</span> --:--</span>
                 <div class="timer-bar-track">
                   <div class="timer-bar-fill" id="timer-progress-fill"></div>
                 </div>
               </div>
             ` : ''}
-            <button class="btn btn-sm btn-outline" onclick="Responder.toggleNavigator()">☰ Navigator</button>
+            <button class="btn btn-sm btn-outline" onclick="Responder.toggleNavigator()">
+              <span style="vertical-align:-1px;">${icon('menu', 14)}</span> Navigator
+            </button>
           </div>
         </div>
       </header>
@@ -682,7 +684,9 @@ class FormResponder {
     root.innerHTML = `
       <div class="results-screen-container">
         <div class="results-hero-card ${scoreResult.passed ? 'hero-passed' : 'hero-failed'}">
-          <div class="results-icon">${scoreResult.passed ? '🎉' : '📋'}</div>
+          <div class="results-icon" style="color: ${scoreResult.passed ? 'var(--success)' : 'var(--primary)'};">
+            ${scoreResult.passed ? icon('award', 48) : icon('fileText', 48)}
+          </div>
           <h2>${isSurvey ? 'Thank You!' : 'Assessment Submitted'}</h2>
           <p class="text-muted">${isSurvey ? 'Your responses have been successfully recorded.' : `You scored ${scoreResult.score} out of ${scoreResult.maxScore} points`}</p>
 
@@ -712,8 +716,12 @@ class FormResponder {
           ` : ''}
 
           <div class="results-actions">
-            <button type="button" class="btn btn-secondary" onclick="window.print()">Print / Save PDF</button>
-            <a href="index.html" class="btn btn-primary">Return to Home</a>
+            <button type="button" class="btn btn-secondary" onclick="window.print()">
+              <span style="vertical-align:-2px;">${icon('printer', 15)}</span> Print / Save PDF
+            </button>
+            <a href="index.html" class="btn btn-primary">
+              <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Home
+            </a>
           </div>
         </div>
 

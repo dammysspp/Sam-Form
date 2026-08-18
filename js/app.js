@@ -59,10 +59,10 @@ class DashboardApp {
     const cloudBtn = document.getElementById('btn-cloud-settings');
     if (cloudBtn && window.FormForgeSupabase) {
       if (FormForgeSupabase.isReady()) {
-        cloudBtn.innerHTML = '🟢 Supabase: Connected';
-        cloudBtn.className = 'btn btn-secondary text-success';
+        cloudBtn.innerHTML = `<span style="color:var(--success); vertical-align:-2px;">${icon('check', 14)}</span> Supabase: Connected`;
+        cloudBtn.className = 'btn btn-secondary';
       } else {
-        cloudBtn.innerHTML = '⚡ Connect Supabase';
+        cloudBtn.innerHTML = `<span style="vertical-align:-2px;">${icon('zap', 14)}</span> Connect Supabase`;
         cloudBtn.className = 'btn btn-secondary';
       }
     }
@@ -101,10 +101,10 @@ class DashboardApp {
     if (list.length === 0) {
       grid.innerHTML = `
         <div class="empty-forms-box">
-          <div class="empty-icon">📝</div>
+          <div class="empty-icon" style="color:var(--text-muted);">${icon('form', 48)}</div>
           <h3>No forms found</h3>
           <p class="text-muted">${this.searchTerm ? 'Try adjusting your search criteria.' : 'Create your first form or pick a starter template below!'}</p>
-          <a href="builder.html" class="btn btn-primary">+ Create New Form</a>
+          <a href="builder.html" class="btn btn-primary"><span style="vertical-align:-2px;">${icon('plus', 14)}</span> Create New Form</a>
         </div>
       `;
       return;
@@ -129,9 +129,9 @@ class DashboardApp {
           </div>
 
           <div class="form-card-meta">
-            <div class="meta-item"><span>❓</span> ${qCount} Questions</div>
-            <div class="meta-item"><span>⏱</span> ${timeLimitText}</div>
-            <div class="meta-item"><span>👥</span> <a href="results.html?id=${f.id}" class="meta-link">${respCount} Responses</a></div>
+            <div class="meta-item"><span style="vertical-align:-2px;">${icon('helpCircle', 14)}</span> ${qCount} Questions</div>
+            <div class="meta-item"><span style="vertical-align:-2px;">${icon('clock', 14)}</span> ${timeLimitText}</div>
+            <div class="meta-item"><span style="vertical-align:-2px;">${icon('users', 14)}</span> <a href="results.html?id=${f.id}" class="meta-link">${respCount} Responses</a></div>
           </div>
 
           <div class="form-card-footer">
@@ -144,12 +144,12 @@ class DashboardApp {
             <div class="footer-dropdown-wrap">
               <button class="btn-icon" onclick="App.toggleCardMenu(event, '${f.id}')">⋮</button>
               <div class="card-context-menu" id="menu_${f.id}">
-                <button onclick="App.shareForm('${f.id}')">🔗 Share & QR Code</button>
-                <button onclick="App.duplicateForm('${f.id}')">📄 Duplicate</button>
-                <button onclick="App.exportJSON('${f.id}')">📥 Export JSON</button>
-                <button onclick="App.exportCSV('${f.id}')">📊 Export Questions CSV</button>
-                <button onclick="App.toggleStatus('${f.id}')">🔄 Change Status</button>
-                <button class="text-danger" onclick="App.deleteForm('${f.id}')">🗑 Delete</button>
+                <button onclick="App.shareForm('${f.id}')"><span style="vertical-align:-2px;">${icon('share', 14)}</span> Share & QR Code</button>
+                <button onclick="App.duplicateForm('${f.id}')"><span style="vertical-align:-2px;">${icon('form', 14)}</span> Duplicate</button>
+                <button onclick="App.exportJSON('${f.id}')"><span style="vertical-align:-2px;">${icon('download', 14)}</span> Export JSON</button>
+                <button onclick="App.exportCSV('${f.id}')"><span style="vertical-align:-2px;">${icon('chart', 14)}</span> Export Questions CSV</button>
+                <button onclick="App.toggleStatus('${f.id}')"><span style="vertical-align:-2px;">${icon('rotate', 14)}</span> Change Status</button>
+                <button class="text-danger" onclick="App.deleteForm('${f.id}')">Delete</button>
               </div>
             </div>
           </div>
@@ -166,19 +166,22 @@ class DashboardApp {
       const resp = await fetch('data/templates.json');
       const templates = await resp.json();
 
-      container.innerHTML = templates.map(t => `
-        <div class="template-item-card" onclick="window.location.href='builder.html?template=${t.id}'">
-          <div class="template-icon-wrap">
-            ${t.category === 'Quiz' ? '🏆' : t.category === 'Examination' ? '🎓' : t.category === 'Feedback' ? '⭐' : '📋'}
+      container.innerHTML = templates.map(t => {
+        const tIcon = t.category === 'Quiz' ? icon('award', 24) : t.category === 'Examination' ? icon('fileText', 24) : icon('form', 24);
+        return `
+          <div class="template-item-card" onclick="window.location.href='builder.html?template=${t.id}'">
+            <div class="template-icon-wrap" style="color:var(--primary);">
+              ${tIcon}
+            </div>
+            <div class="template-info">
+              <h4>${Utils.escapeHTML(t.title)}</h4>
+              <p class="text-muted">${Utils.escapeHTML(t.description)}</p>
+              <span class="template-tag">${t.category} • ${t.questions?.length || 0} Questions</span>
+            </div>
+            <button class="btn btn-sm btn-outline">Use Template</button>
           </div>
-          <div class="template-info">
-            <h4>${Utils.escapeHTML(t.title)}</h4>
-            <p class="text-muted">${Utils.escapeHTML(t.description)}</p>
-            <span class="template-tag">${t.category} • ${t.questions?.length || 0} Questions</span>
-          </div>
-          <button class="btn btn-sm btn-outline">Use Template</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     } catch (e) {
       container.innerHTML = '<p class="text-muted">No templates available.</p>';
     }

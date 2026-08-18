@@ -409,13 +409,13 @@ class FormResults {
     rotateOverlay.className = 'landscape-rotate-prompt';
     rotateOverlay.id = 'landscape_rotate_prompt';
     rotateOverlay.innerHTML = `
-      <div class="rotate-phone-icon">📱 ➔ 📲</div>
+      <div class="rotate-phone-icon" style="color:var(--primary); margin-bottom:1rem;">${icon('rotate', 48)}</div>
       <div class="rotate-prompt-title">Rotate Device to Landscape</div>
       <p class="rotate-prompt-desc">
         To review responses, grade written answers, and view detailed statistics, please turn your phone horizontally.
       </p>
       <button type="button" class="btn-bypass-landscape" onclick="Results.closeInspector()">
-        ✕ Close & Return to Table
+        Close & Return to Table
       </button>
     `;
     document.body.appendChild(rotateOverlay);
@@ -455,7 +455,7 @@ class FormResults {
               <span>Grade</span>
             </div>
             <div class="inspect-kpi">
-              <strong style="font-size:1.05rem;">${scoring.isFullyGraded ? (scoring.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING ⏳'}</strong>
+              <strong style="font-size:1.05rem;">${scoring.isFullyGraded ? (scoring.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING'}</strong>
               <span>Status</span>
             </div>
           </div>
@@ -473,7 +473,7 @@ class FormResults {
                   <div class="inspect-q-title-row">
                     <span><strong>Q${idx + 1}.</strong> ${Utils.escapeHTML(q.question)}</span>
                     <span class="badge ${evalData.isCorrect ? 'badge-correct' : 'badge-incorrect'}" style="flex-shrink:0;">
-                      ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '⏳' : ''}
+                      ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '(Review Required)' : ''}
                     </span>
                   </div>
 
@@ -489,7 +489,7 @@ class FormResults {
                   <!-- Manual Examiner Grading Panel -->
                   <div class="manual-grading-panel">
                     <div class="manual-grading-header">
-                      <span><strong>✏️ Examiner Evaluation & Marks</strong></span>
+                      <span><strong><span style="vertical-align:-2px;">${icon('edit', 14)}</span> Examiner Evaluation & Marks</strong></span>
                       ${qManual.gradedAt ? `<span class="text-success font-weight-bold" style="font-size:0.75rem;">✓ Graded on ${Utils.formatDate(qManual.gradedAt)}</span>` : '<span class="text-muted" style="font-size:0.75rem;">Awaiting review</span>'}
                     </div>
 
@@ -506,7 +506,7 @@ class FormResults {
                       ` : ''}
                       <button type="button" class="btn btn-sm btn-danger" 
                         onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Incorrect')">
-                        ✗ Incorrect (0 pts)
+                        ✕ Incorrect (0 pts)
                       </button>
                     </div>
 
