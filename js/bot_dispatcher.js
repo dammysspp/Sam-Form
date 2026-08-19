@@ -142,12 +142,41 @@ class BotDispatcher {
     // 2. Try Telegram Bot API (@BotFather token)
     if (cfg.telegramBotToken) {
       try {
+        let finalChatId = cleanTarget;
+
+        // If target is a username or not purely numeric, resolve chatId from recent bot updates
+        if (isNaN(finalChatId)) {
+          try {
+            const updatesRes = await fetch(`https://api.telegram.org/bot${cfg.telegramBotToken}/getUpdates`);
+            const updatesData = await updatesRes.json();
+            if (updatesData.ok && updatesData.result && updatesData.result.length > 0) {
+              // Find matching username in recent updates or pick latest sender
+              const match = updatesData.result.reverse().find(u => {
+                const chat = u.message?.chat || u.my_chat_member?.chat;
+                const uname = (chat?.username || '').toLowerCase();
+                return uname === cleanTarget.toLowerCase();
+              });
+
+              if (match) {
+                finalChatId = (match.message?.chat || match.my_chat_member?.chat).id;
+              } else {
+                // If single candidate active, use latest subscriber ID
+                const latest = updatesData.result[0];
+                const chat = latest.message?.chat || latest.my_chat_member?.chat;
+                if (chat?.id) finalChatId = chat.id;
+              }
+            }
+          } catch (resErr) {
+            console.warn('[BotDispatcher] Could not query getUpdates:', resErr);
+          }
+        }
+
         const endpoint = `https://api.telegram.org/bot${cfg.telegramBotToken}/sendMessage`;
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            chat_id: cleanTarget,
+            chat_id: finalChatId,
             text: text,
             parse_mode: 'HTML'
           })
