@@ -335,7 +335,18 @@ class FormBuilder {
         </div>
 
         <div class="setting-group">
-          <label class="setting-title">Scoring & Grading Policy</label>
+          <label class="setting-title">Scoring & Results Disclosure</label>
+          <div class="toggle-row" style="margin-bottom:1rem;">
+            <label class="toggle-label">
+              <input type="checkbox" ${s.showScoreAfterSubmission !== false ? 'checked' : ''} 
+                onchange="Builder.updateSetting('showScoreAfterSubmission', this.checked)" />
+              <span><strong>Reveal Scores Immediately Upon Submission</strong></span>
+            </label>
+            <p class="text-muted" style="font-size:0.8rem; margin:0.25rem 0 0 1.75rem;">
+              When unchecked, candidate scores will be hidden after submission. Candidates who did not provide an email will be prompted to enter one so results can be delivered later.
+            </p>
+          </div>
+
           <div class="grid-2-col">
             <div>
               <label class="form-label-sm">Passing Score Percentage (%)</label>

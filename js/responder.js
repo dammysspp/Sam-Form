@@ -715,6 +715,55 @@ class FormResponder {
 
     const isExam = this.form.mode === 'exam';
     const isSurvey = this.form.mode === 'survey';
+    const revealScore = this.form.settings?.showScoreAfterSubmission !== false;
+    const hasEmail = this.respondentEmail && this.respondentEmail !== 'N/A' && this.respondentEmail.includes('@');
+
+    // If score is hidden and candidate didn't provide email, show email capture card
+    if (!revealScore && !isSurvey) {
+      root.innerHTML = `
+        <div class="results-screen-container">
+          <div class="results-hero-card hero-passed">
+            <div class="results-icon" style="color: var(--success);">
+              ${icon('check', 48)}
+            </div>
+            <h2>Assessment Submitted Successfully!</h2>
+            <p class="text-muted" style="margin-bottom: 1.5rem;">
+              Your answers have been recorded. Scores are currently withheld by the examiner and will be reviewed and sent directly to you.
+            </p>
+
+            ${!hasEmail ? `
+              <div class="email-capture-box" style="background: var(--bg-surface-subtle); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.5rem 0; text-align: left;">
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                  <span style="color:var(--primary);">${icon('mail', 20)}</span>
+                  <strong style="font-size:1.05rem; color:var(--text-main);">Where should we send your score?</strong>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+                  You did not enter an email address before starting. Enter your email below so the instructor can deliver your graded results and feedback.
+                </p>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                  <input type="email" id="post_submission_email" class="form-input" placeholder="student@example.com" style="flex:1; min-width:220px;" />
+                  <button type="button" class="btn btn-primary" onclick="Responder.savePostSubmissionEmail('${responseRecord.id}')">
+                    Save Email & Finish
+                  </button>
+                </div>
+                <div id="post_email_msg" style="margin-top:0.5rem; font-size:0.82rem;"></div>
+              </div>
+            ` : `
+              <div class="alert-box alert-success" style="margin: 1.5rem 0; text-align: left;">
+                <span style="vertical-align:-2px;">${icon('check', 16)}</span> Graded results and feedback will be sent to <strong>${Utils.escapeHTML(this.respondentEmail)}</strong> once finalized.
+              </div>
+            `}
+
+            <div class="results-actions" style="margin-top: 1.5rem;">
+              <a href="index.html" class="btn btn-secondary">
+                <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Home
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
 
     root.innerHTML = `
       <div class="results-screen-container">
@@ -801,6 +850,40 @@ class FormResponder {
         ` : ''}
       </div>
     `;
+  }
+
+  async savePostSubmissionEmail(responseId) {
+    const input = document.getElementById('post_submission_email');
+    const msg = document.getElementById('post_email_msg');
+    if (!input) return;
+
+    const email = input.value.trim();
+    if (!email || !email.includes('@')) {
+      if (msg) {
+        msg.innerHTML = '<span class="text-danger">Please enter a valid email address.</span>';
+      }
+      return;
+    }
+
+    this.respondentEmail = email;
+
+    // Update response in DB and Supabase Cloud
+    try {
+      const all = await DB.getAllResponses();
+      const existing = all.find(r => r.id === responseId);
+      if (existing) {
+        existing.respondentEmail = email;
+        await DB.saveResponse(existing);
+      }
+
+      if (msg) {
+        msg.innerHTML = `<span class="text-success">${icon('check', 14)} Email saved! Results will be dispatched to <strong>${Utils.escapeHTML(email)}</strong>.</span>`;
+      }
+      input.disabled = true;
+      Utils.showToast('Email address recorded!', 'success');
+    } catch (e) {
+      console.error('Error saving post-submission email', e);
+    }
   }
 
   renderError(msg) {
