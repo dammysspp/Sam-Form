@@ -253,6 +253,38 @@ const FormForgeSupabase = {
       console.warn('Cloud delete response error:', err);
       return false;
     }
+  },
+
+  // --- BOT & PLATFORM CONFIG SYNC (SUPABASE CLOUD) ---
+  async syncSettingsToCloud(key, valueObj) {
+    if (!this.isReady()) return false;
+    try {
+      const payload = {
+        key: key,
+        value: valueObj,
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await this.client.from('app_settings').upsert(payload, { onConflict: 'key' });
+      if (error) {
+        console.warn('Cloud save settings notice:', error.message);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Cloud save settings error:', err);
+      return false;
+    }
+  },
+
+  async fetchSettingsFromCloud(key) {
+    if (!this.isReady()) return null;
+    try {
+      const { data, error } = await this.client.from('app_settings').select('value').eq('key', key).single();
+      if (error || !data) return null;
+      return data.value;
+    } catch (err) {
+      return null;
+    }
   }
 };
 

@@ -9,6 +9,19 @@
 class BotDispatcher {
   constructor() {
     this.CONFIG_KEY = 'samform_bot_config';
+    this.initCloudSync();
+  }
+
+  async initCloudSync() {
+    // Attempt cloud pull on startup
+    if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
+      try {
+        const cloudConfig = await FormForgeSupabase.fetchSettingsFromCloud(this.CONFIG_KEY);
+        if (cloudConfig) {
+          localStorage.setItem(this.CONFIG_KEY, JSON.stringify(cloudConfig));
+        }
+      } catch (e) {}
+    }
   }
 
   getConfig() {
@@ -21,6 +34,9 @@ class BotDispatcher {
       // Telegram Bot API (100% Free official token)
       telegramBotToken: '', // e.g. 7842918234:AAHkL...
       enableAutoTelegram: false,
+
+      // Telegram User Account Gateway (Personal MTProto userbot)
+      enableAutoTelegramUser: false,
 
       // EmailJS Automation (100% Free 200 emails/month tier)
       emailjsServiceId: '', // e.g. service_xxxxxx
@@ -40,9 +56,15 @@ class BotDispatcher {
     }
   }
 
-  saveConfig(cfg) {
+  async saveConfig(cfg) {
     localStorage.setItem(this.CONFIG_KEY, JSON.stringify(cfg));
-    if (window.Utils) Utils.showToast('Bot & Email automation settings saved!', 'success');
+
+    // Persist to Supabase Cloud Database so settings persist across all devices & browsers
+    if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
+      await FormForgeSupabase.syncSettingsToCloud(this.CONFIG_KEY, cfg);
+    }
+
+    if (window.Utils) Utils.showToast('Bot & Email automation settings saved to Cloud & Local!', 'success');
   }
 
   // --- 1. WHATSAPP GATEWAY DISPATCH (Option B) ---
