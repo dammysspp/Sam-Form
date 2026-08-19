@@ -499,6 +499,25 @@ class FormResults {
               </button>
             </div>
 
+            <!-- Inline Candidate Contacts Quick Bar -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:0.6rem; margin-bottom:0.85rem; background:#ffffff; padding:0.75rem; border-radius:8px; border:1px solid var(--border-color);">
+              <div>
+                <label class="form-label-sm" style="font-size:0.75rem;"><span style="vertical-align:-1px; color:#25D366;">${icon('whatsapp', 13)}</span> WhatsApp Phone Number:</label>
+                <input type="tel" id="disp_phone_${resp.id}" class="form-input form-input-sm" placeholder="e.g. 2348012345678" value="${resp.respondentPhone && resp.respondentPhone !== 'N/A' ? Utils.escapeHTML(resp.respondentPhone) : ''}" 
+                  onchange="Results.updateCandidateContact('${resp.id}', 'respondentPhone', this.value)" />
+              </div>
+              <div>
+                <label class="form-label-sm" style="font-size:0.75rem;"><span style="vertical-align:-1px; color:#229ED9;">${icon('telegram', 13)}</span> Telegram Handle or Phone:</label>
+                <input type="text" id="disp_tg_${resp.id}" class="form-input form-input-sm" placeholder="e.g. @username or phone" value="${resp.respondentTelegram && resp.respondentTelegram !== 'N/A' ? Utils.escapeHTML(resp.respondentTelegram) : ''}" 
+                  onchange="Results.updateCandidateContact('${resp.id}', 'respondentTelegram', this.value)" />
+              </div>
+              <div>
+                <label class="form-label-sm" style="font-size:0.75rem;"><span style="vertical-align:-1px; color:var(--primary);">${icon('mail', 13)}</span> Email Address:</label>
+                <input type="email" id="disp_email_${resp.id}" class="form-input form-input-sm" placeholder="student@example.com" value="${resp.respondentEmail && resp.respondentEmail !== 'N/A' ? Utils.escapeHTML(resp.respondentEmail) : ''}" 
+                  onchange="Results.updateCandidateContact('${resp.id}', 'respondentEmail', this.value)" />
+              </div>
+            </div>
+
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
               <button type="button" class="btn btn-sm" style="background:#25D366; color:#ffffff; border:none;" onclick="Results.dispatchWhatsApp('${resp.id}')">
                 <span style="vertical-align:-2px;">${icon('whatsapp', 14)}</span> WhatsApp DM
@@ -745,6 +764,17 @@ class FormResults {
     }
 
     Utils.showToast(`✓ Assessment Approved & Finalized! Score: ${resp.scoring?.score}/${resp.scoring?.maxScore} (${resp.scoring?.percentage}%)`, 'success', 4000);
+  }
+
+  // Update candidate contact info live
+  async updateCandidateContact(responseId, field, val) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    resp[field] = val.trim() || 'N/A';
+    await DB.saveResponse(resp);
+    await this.reloadResponses();
+    Utils.showToast(`Updated candidate ${field.replace('respondent', '')}!`, 'success');
   }
 
   async deleteResponse(responseId) {
