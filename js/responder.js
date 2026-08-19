@@ -15,6 +15,8 @@ class FormResponder {
     this.isSubmitted = false;
     this.respondentName = '';
     this.respondentEmail = '';
+    this.respondentPhone = '';
+    this.respondentTelegram = '';
     this.orderedQuestions = [];
   }
 
@@ -125,7 +127,7 @@ class FormResponder {
 
             <!-- Candidate Details Form -->
             <div class="intro-candidate-form">
-              <h3 class="intro-candidate-title"><span style="vertical-align:-2px;">${icon('user', 18)}</span> Candidate Information</h3>
+              <h3 class="intro-candidate-title"><span style="vertical-align:-2px;">${icon('user', 18)}</span> Candidate Information & Result Delivery</h3>
               <div class="grid-2-col">
                 <div>
                   <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
@@ -138,6 +140,20 @@ class FormResponder {
                     placeholder="candidate@example.com" value="${Utils.escapeHTML(this.respondentEmail)}" />
                 </div>
               </div>
+
+              <div class="grid-2-col" style="margin-top: 0.75rem;">
+                <div>
+                  <label class="form-label-sm">WhatsApp Phone Number (with Country Code)</label>
+                  <input type="tel" id="intro_resp_phone" class="form-input" 
+                    placeholder="e.g. +2348012345678" value="${Utils.escapeHTML(this.respondentPhone || '')}" />
+                </div>
+                <div>
+                  <label class="form-label-sm">Telegram Username (or Phone)</label>
+                  <input type="text" id="intro_resp_telegram" class="form-input" 
+                    placeholder="e.g. @john_doe or +234..." value="${Utils.escapeHTML(this.respondentTelegram || '')}" />
+                </div>
+              </div>
+
               <div style="margin-top: 0.75rem;">
                 <label class="form-label-sm">Student / Candidate ID (Optional)</label>
                 <input type="text" id="intro_resp_id" class="form-input" 
@@ -157,6 +173,8 @@ class FormResponder {
   handleBeginClick() {
     const nameInput = document.getElementById('intro_resp_name');
     const emailInput = document.getElementById('intro_resp_email');
+    const phoneInput = document.getElementById('intro_resp_phone');
+    const telegramInput = document.getElementById('intro_resp_telegram');
     const idInput = document.getElementById('intro_resp_id');
 
     const name = nameInput ? nameInput.value.trim() : '';
@@ -168,6 +186,8 @@ class FormResponder {
 
     this.respondentName = name;
     this.respondentEmail = emailInput ? emailInput.value.trim() : '';
+    this.respondentPhone = phoneInput ? phoneInput.value.trim() : '';
+    this.respondentTelegram = telegramInput ? telegramInput.value.trim().replace(/^@/, '') : '';
     this.respondentId = idInput ? idInput.value.trim() : '';
 
     this.startAssessment();
@@ -296,6 +316,8 @@ class FormResponder {
       currentSectionIndex: this.currentSectionIndex,
       respondentName: this.respondentName,
       respondentEmail: this.respondentEmail,
+      respondentPhone: this.respondentPhone,
+      respondentTelegram: this.respondentTelegram,
       respondentId: this.respondentId,
       startTime: this.startTime,
       timestamp: new Date().toISOString()
@@ -691,6 +713,8 @@ class FormResponder {
       formTitle: this.form.title,
       respondentName: this.respondentName || 'Anonymous Candidate',
       respondentEmail: this.respondentEmail || 'N/A',
+      respondentPhone: this.respondentPhone || 'N/A',
+      respondentTelegram: this.respondentTelegram || 'N/A',
       respondentId: this.respondentId || 'N/A',
       answers: this.answers,
       flags: Array.from(this.flags),

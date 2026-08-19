@@ -430,7 +430,9 @@ class FormResults {
             <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
               <h3 class="modal-title" style="margin:0; font-size:1.2rem;">${Utils.escapeHTML(resp.respondentName || 'Candidate')}</h3>
               ${resp.respondentId && resp.respondentId !== 'N/A' ? `<span class="badge" style="background:#e0e7ff; color:#3730a3; font-size:0.75rem;">ID: ${Utils.escapeHTML(resp.respondentId)}</span>` : ''}
-              ${resp.respondentEmail && resp.respondentEmail !== 'N/A' ? `<span class="text-muted" style="font-size:0.8rem;">(${Utils.escapeHTML(resp.respondentEmail)})</span>` : ''}
+              ${resp.respondentEmail && resp.respondentEmail !== 'N/A' ? `<span class="badge" style="background:#f1f5f9; color:#475569; font-size:0.75rem;"><span style="vertical-align:-1px;">${icon('mail', 12)}</span> ${Utils.escapeHTML(resp.respondentEmail)}</span>` : ''}
+              ${resp.respondentPhone && resp.respondentPhone !== 'N/A' ? `<span class="badge" style="background:#dcfce7; color:#166534; font-size:0.75rem;"><span style="vertical-align:-1px;">${icon('whatsapp', 12)}</span> ${Utils.escapeHTML(resp.respondentPhone)}</span>` : ''}
+              ${resp.respondentTelegram && resp.respondentTelegram !== 'N/A' ? `<span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.75rem;"><span style="vertical-align:-1px;">${icon('telegram', 12)}</span> @${Utils.escapeHTML(resp.respondentTelegram)}</span>` : ''}
             </div>
             <small class="text-muted" style="display:block; font-size:0.78rem;">
               Submitted on ${Utils.formatDate(resp.submittedAt)} • Duration: ${Utils.formatTime(resp.durationSeconds)}
@@ -457,6 +459,36 @@ class FormResults {
             <div class="inspect-kpi">
               <strong style="font-size:1.05rem;">${scoring.isFullyGraded ? (scoring.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING'}</strong>
               <span>Status</span>
+            </div>
+          </div>
+
+          <!-- Multi-Channel Instant Score Dispatch Panel -->
+          <div class="score-dispatch-card" style="background:#f8fafc; border:1.5px solid var(--border-color); border-radius:var(--radius-md); padding:1rem 1.25rem; margin:1.25rem 0; box-shadow:var(--shadow-sm);">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem;">
+              <div>
+                <strong style="font-size:0.95rem; color:var(--text-main); display:flex; align-items:center; gap:0.4rem;">
+                  <span style="color:var(--primary);">${icon('send', 16)}</span> Dispatch Graded Score to Candidate (Free)
+                </strong>
+                <small class="text-muted" style="font-size:0.78rem;">Send personalized results directly to candidate via WhatsApp, Telegram, Email, or all at once.</small>
+              </div>
+              <button type="button" class="btn btn-sm btn-primary" onclick="Results.dispatchAllChannels('${resp.id}')" title="Send via all available candidate channels">
+                <span style="vertical-align:-1px;">${icon('send', 13)}</span> Send to All Channels
+              </button>
+            </div>
+
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm" style="background:#25D366; color:#ffffff; border:none;" onclick="Results.dispatchWhatsApp('${resp.id}')">
+                <span style="vertical-align:-2px;">${icon('whatsapp', 14)}</span> WhatsApp DM
+              </button>
+              <button type="button" class="btn btn-sm" style="background:#229ED9; color:#ffffff; border:none;" onclick="Results.dispatchTelegram('${resp.id}')">
+                <span style="vertical-align:-2px;">${icon('telegram', 14)}</span> Telegram DM
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="Results.dispatchEmail('${resp.id}')">
+                <span style="vertical-align:-2px;">${icon('mail', 14)}</span> Email Report
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="Results.copyScoreCardText('${resp.id}')">
+                <span style="vertical-align:-2px;">${icon('fileText', 14)}</span> Copy Text
+              </button>
             </div>
           </div>
 
@@ -643,6 +675,124 @@ class FormResults {
     };
     Exporter.downloadFile(JSON.stringify(data, null, 2), `${this.form.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_responses.json`, 'application/json');
     Utils.showToast('Responses exported to JSON', 'success');
+  }
+
+  // --- MULTI-CHANNEL SCORE DISPATCH (100% FREE DIRECT TO RESPONDENT) ---
+  generateScoreReportText(resp) {
+    const s = resp.scoring || {};
+    const formTitle = this.form.title || 'Assessment';
+    const name = resp.respondentName || 'Candidate';
+    const statusText = s.isFullyGraded ? (s.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING REVIEW';
+    
+    let text = `🎓 SAMSCO COMMUNICATIONS — ASSESSMENT RESULT\n\n`;
+    text += `Hello ${name},\n`;
+    text += `Your submission for "${formTitle}" has been graded.\n\n`;
+    text += `📊 SCORE REPORT:\n`;
+    text += `• Total Score: ${s.score || 0} / ${s.maxScore || 0}\n`;
+    text += `• Percentage: ${s.percentage || 0}%\n`;
+    text += `• Letter Grade: ${s.grade || 'N/A'}\n`;
+    text += `• Result Status: ${statusText}\n`;
+    text += `• Duration: ${Utils.formatTime(resp.durationSeconds || 0)}\n\n`;
+
+    if (s.remark) {
+      text += `📝 EXAMINER REMARKS:\n"${s.remark}"\n\n`;
+    }
+
+    text += `Generated securely via SamForm.`;
+    return text;
+  }
+
+  dispatchWhatsApp(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    let phone = resp.respondentPhone || '';
+    phone = phone.replace(/[^0-9]/g, ''); // Clean to pure numbers
+
+    const msg = this.generateScoreReportText(resp);
+    const encodedMsg = encodeURIComponent(msg);
+
+    let url = '';
+    if (phone) {
+      url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`;
+    } else {
+      url = `https://api.whatsapp.com/send?text=${encodedMsg}`;
+      Utils.showToast('Candidate provided no phone number. Select contact in WhatsApp.', 'info');
+    }
+
+    window.open(url, '_blank');
+    Utils.showToast('Opening WhatsApp DM with candidate score card...', 'success');
+  }
+
+  dispatchTelegram(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    let tg = (resp.respondentTelegram || '').trim().replace(/^@/, '');
+    const msg = this.generateScoreReportText(resp);
+    const encodedMsg = encodeURIComponent(msg);
+
+    let url = '';
+    if (tg && !tg.startsWith('+') && isNaN(tg)) {
+      // Direct user handle: open user chat or share
+      url = `https://t.me/${tg}`;
+      // Copy to clipboard so examiner can paste instantly in the chat
+      navigator.clipboard.writeText(msg);
+      Utils.showToast(`Opening @${tg} in Telegram. Formatted score copied to clipboard!`, 'success', 3500);
+    } else {
+      url = `https://t.me/share/url?url=${encodeURIComponent('https://samform.vercel.app')}&text=${encodedMsg}`;
+      Utils.showToast('Opening Telegram Share...', 'success');
+    }
+
+    window.open(url, '_blank');
+  }
+
+  dispatchEmail(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    const email = resp.respondentEmail && resp.respondentEmail !== 'N/A' ? resp.respondentEmail : '';
+    const subject = encodeURIComponent(`Your Results: ${this.form.title} [Grade: ${resp.scoring?.grade || 'N/A'}]`);
+    const body = encodeURIComponent(this.generateScoreReportText(resp));
+
+    const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+    Utils.showToast('Launching email composer with pre-filled score...', 'success');
+  }
+
+  dispatchAllChannels(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    let dispatched = 0;
+    if (resp.respondentPhone && resp.respondentPhone !== 'N/A') {
+      this.dispatchWhatsApp(responseId);
+      dispatched++;
+    }
+    if (resp.respondentEmail && resp.respondentEmail !== 'N/A' && resp.respondentEmail.includes('@')) {
+      setTimeout(() => this.dispatchEmail(responseId), 800);
+      dispatched++;
+    }
+    if (resp.respondentTelegram && resp.respondentTelegram !== 'N/A') {
+      setTimeout(() => this.dispatchTelegram(responseId), 1600);
+      dispatched++;
+    }
+
+    if (dispatched === 0) {
+      this.copyScoreCardText(responseId);
+      Utils.showToast('No contact saved. Formatted score report copied to clipboard!', 'warning');
+    } else {
+      Utils.showToast(`Broadcasting score via ${dispatched} candidate channel(s)!`, 'success');
+    }
+  }
+
+  copyScoreCardText(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    const msg = this.generateScoreReportText(resp);
+    navigator.clipboard.writeText(msg);
+    Utils.showToast('Formatted candidate score report copied to clipboard!', 'success');
   }
 }
 
