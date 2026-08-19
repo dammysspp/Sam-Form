@@ -148,7 +148,7 @@ const FormForgeSupabase = {
   async submitResponseToCloud(resp) {
     if (!this.isReady()) return null;
     try {
-      const corePayload = {
+      const payload = {
         id: resp.id,
         form_id: resp.formId,
         form_title: resp.formTitle,
@@ -164,24 +164,11 @@ const FormForgeSupabase = {
         submitted_at: resp.submittedAt || new Date().toISOString()
       };
 
-      // Try upserting with extra contact columns (respondent_phone, respondent_telegram)
-      const extendedPayload = {
-        ...corePayload,
-        respondent_phone: resp.respondentPhone || 'N/A',
-        respondent_telegram: resp.respondentTelegram || 'N/A'
-      };
-
-      let { error } = await this.client.from('responses').upsert([extendedPayload], { onConflict: 'id' });
-      
-      // If error occurs because columns don't exist in Supabase schema yet (status 400), fallback to core schema
-      if (error) {
-        const fallbackRes = await this.client.from('responses').upsert([corePayload], { onConflict: 'id' });
-        if (fallbackRes.error) throw fallbackRes.error;
-      }
-
+      const { data, error } = await this.client.from('responses').upsert(payload, { onConflict: 'id' });
+      if (error) throw error;
       return true;
     } catch (err) {
-      console.warn('Cloud submit error (response):', err);
+      console.warn('Cloud submit error (response):', err.message || err);
       return false;
     }
   },
