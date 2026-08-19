@@ -20,9 +20,9 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
-const API_SECRET = process.env.API_SECRET || '';
 
 // --- SUPABASE CLOUD SESSION PERSISTENCE ---
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://aakrjnpprxhmaxeqhnsk.supabase.co';
@@ -61,6 +61,7 @@ async function backupWhatsAppSessionToCloud() {
       value: sessionDump,
       updated_at: new Date().toISOString()
     }, { onConflict: 'key' });
+    console.log('✓ WhatsApp credentials successfully backed up to Supabase Cloud!');
   } catch (e) {
     console.warn('Session cloud backup notice:', e.message);
   }
@@ -121,7 +122,7 @@ async function startWhatsAppBot() {
 
       setTimeout(() => startWhatsAppBot(), 3000);
     } else if (connection === 'open') {
-      console.log('\n✅ WhatsApp Gateway is ONLINE & CONNECTED!');
+      console.log('\n✅ WhatsApp Gateway is ONLINE & PERMANENTLY CONNECTED!');
       isWhatsAppConnected = true;
       currentQR = '';
       currentQRDataUrl = '';
@@ -160,7 +161,7 @@ async function initTelegramUserbot(apiId, apiHash) {
   }
 }
 
-// 🌐 1. PAIRING & LINKING WEB UI
+// 🌐 1. PAIRING & LINKING WEB UI (With Real-Time Status & Pairing Code Alternative)
 app.get('/', (req, res) => res.redirect('/pair'));
 
 app.get('/pair', (req, res) => {
@@ -173,17 +174,29 @@ app.get('/pair', (req, res) => {
       <title>Link Gateways — SamForm</title>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
-        .card { background: #1e293b; border: 1.5px solid #334155; border-radius: 16px; padding: 2rem; max-width: 500px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        h1 { margin-top: 0; font-size: 1.4rem; color: #38bdf8; text-align: center; }
+        .card { background: #1e293b; border: 1.5px solid #334155; border-radius: 16px; padding: 2rem; max-width: 520px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        h1 { margin-top: 0; font-size: 1.35rem; color: #38bdf8; text-align: center; }
         .service-box { background: #090d16; border: 1px solid #334155; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
         .qr-box { background: #ffffff; padding: 0.75rem; border-radius: 8px; display: inline-block; margin: 0.75rem 0; }
         .qr-box img { display: block; max-width: 220px; height: auto; margin: 0 auto; }
-        .status-badge { display: inline-block; padding: 0.3rem 0.75rem; border-radius: 9999px; font-weight: 700; font-size: 0.8rem; margin-bottom: 0.5rem; }
+        .status-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.82rem; margin-bottom: 0.5rem; }
         .status-online { background: #065f46; color: #34d399; }
         .status-waiting { background: #854d0e; color: #fde047; }
-        input { width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #fff; margin-bottom: 0.5rem; box-sizing: border-box; }
+        input { width: 100%; padding: 0.65rem; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #fff; margin-bottom: 0.5rem; box-sizing: border-box; }
         button { width: 100%; background: #3b82f6; color: #fff; border: none; padding: 0.65rem; border-radius: 6px; font-weight: 700; cursor: pointer; }
       </style>
+      <script>
+        // Real-time polling to reload once connected so QR disappears automatically
+        setInterval(async () => {
+          try {
+            const res = await fetch('/health');
+            const data = await res.json();
+            if (data.whatsappConnected && document.querySelector('.status-waiting')) {
+              window.location.reload();
+            }
+          } catch(e) {}
+        }, 3000);
+      </script>
     </head>
     <body>
       <div class="card">
@@ -194,7 +207,7 @@ app.get('/pair', (req, res) => {
           <h3 style="margin: 0 0 0.5rem 0; color: #25D366;">WhatsApp Gateway</h3>
           ${isWhatsAppConnected ? `
             <div class="status-badge status-online">✓ WHATSAPP ONLINE & PERMANENTLY SYNCED</div>
-            <p style="font-size: 0.82rem; color: #94a3b8;">Linked and actively sending results.</p>
+            <p style="font-size: 0.84rem; color: #94a3b8; margin: 0.25rem 0 0 0;">Linked to Supabase Cloud. You never need to scan again!</p>
           ` : `
             <div class="status-badge status-waiting">⏳ WAITING FOR QR SCAN</div>
             ${currentQRDataUrl ? `
