@@ -1017,11 +1017,29 @@ class FormResponder {
         if (phone) existing.respondentPhone = phone;
         if (tg) existing.respondentTelegram = tg;
         if (email) existing.respondentEmail = email;
+
+        if (!existing.answers) existing.answers = {};
+        if (!existing.answers._metadata) existing.answers._metadata = {};
+        if (phone) existing.answers._metadata.phone = phone;
+        if (tg) existing.answers._metadata.telegram = tg;
+
         await DB.saveResponse(existing);
       }
 
       if (msg) {
-        msg.innerHTML = `<span class="text-success">${icon('check', 14)} Contact details saved successfully! The examiner will dispatch your results.</span>`;
+        msg.innerHTML = `
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:0.85rem; margin-top:0.75rem;">
+            <div style="color:#065f46; font-weight:700; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem;">
+              ${icon('check', 16)} Delivery channels saved successfully!
+            </div>
+            <p style="font-size:0.82rem; color:#047857; margin-bottom:0.6rem;">
+              To guarantee immediate delivery to your Telegram, tap below to connect with our official bot and press <strong>START</strong>:
+            </p>
+            <a href="https://t.me/samscoclawd_bot?start=result_${responseId}" target="_blank" class="btn btn-sm" style="background:#229ED9; color:#fff; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+              <span style="vertical-align:-2px;">${icon('telegram', 14)}</span> Open @samscoclawd_bot & Tap START
+            </a>
+          </div>
+        `;
       }
       if (phoneInput) phoneInput.disabled = true;
       if (tgInput) tgInput.disabled = true;
