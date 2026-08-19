@@ -154,6 +154,8 @@ const FormForgeSupabase = {
         form_title: resp.formTitle,
         respondent_name: resp.respondentName || 'Anonymous Candidate',
         respondent_email: resp.respondentEmail || 'N/A',
+        respondent_phone: resp.respondentPhone || 'N/A',
+        respondent_telegram: resp.respondentTelegram || 'N/A',
         respondent_id: resp.respondentId || 'N/A',
         answers: resp.answers || {},
         flags: resp.flags || [],
@@ -164,7 +166,8 @@ const FormForgeSupabase = {
         submitted_at: resp.submittedAt || new Date().toISOString()
       };
 
-      const { data, error } = await this.client.from('responses').insert([payload]);
+      // Use upsert so updating an existing response (e.g. adding manual grades or email) doesn't throw 409 conflict
+      const { data, error } = await this.client.from('responses').upsert([payload], { onConflict: 'id' });
       if (error) throw error;
       return true;
     } catch (err) {
