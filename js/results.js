@@ -15,11 +15,20 @@ class FormResults {
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);
-    const formId = urlParams.get('id');
+    let formId = urlParams.get('id');
 
     if (!formId) {
-      this.renderNoForm();
-      return;
+      // Auto-fallback: fetch available forms so admin can pick or see latest
+      const allForms = await DB.getAllForms();
+      if (allForms.length > 0) {
+        formId = allForms[0].id; // Default to first available form
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('id', formId);
+        window.history.replaceState({}, '', newUrl);
+      } else {
+        this.renderNoForm();
+        return;
+      }
     }
 
     this.form = await DB.getFormById(formId);
@@ -33,28 +42,31 @@ class FormResults {
     this.render();
   }
 
-  async reloadResponses() {
-    this.responses = await DB.getResponsesByFormId(this.form.id);
-    
-    // Ensure scores are fresh with manual grades evaluated
-    this.responses.forEach(r => {
-      r.scoring = ScoringEngine.calculateTotalResults(this.form, r.answers || {}, r.manualGrades || {});
-    });
-
-    this.filterAndSort();
-  }
-
-  renderNoForm() {
+  async renderNoForm() {
     const root = document.getElementById('results-app');
-    if (root) {
-      root.innerHTML = `
-        <div class="empty-state-card">
-          <h2>No Form Selected</h2>
-          <p>Please navigate to a valid form from the dashboard to view responses.</p>
-          <a href="index.html" class="btn btn-primary">Back to Dashboard</a>
-        </div>
-      `;
-    }
+    if (!root) return;
+
+    const allForms = await DB.getAllForms();
+    root.innerHTML = `
+      <div class="empty-state-card" style="max-width:560px; margin:4rem auto; text-align:center; padding:2.5rem 2rem; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:var(--shadow-md);">
+        <div style="color:var(--primary); margin-bottom:1rem;">${icon('chart', 48)}</div>
+        <h2>Select an Assessment to View Results</h2>
+        <p class="text-muted" style="margin-bottom:1.5rem;">Choose an assessment from your dashboard or select one below to inspect responses and grade candidates.</p>
+        
+        ${allForms.length > 0 ? `
+          <div style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem; text-align:left;">
+            ${allForms.map(f => `
+              <a href="results.html?id=${f.id}" class="btn btn-secondary" style="justify-content:space-between; display:flex; padding:0.75rem 1rem;">
+                <span style="font-weight:700;">${Utils.escapeHTML(f.title)}</span>
+                <span class="badge" style="text-transform:uppercase;">${f.status || 'Draft'} →</span>
+              </a>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <a href="index.html" class="btn btn-primary">Return to Dashboard</a>
+      </div>
+    `;
   }
 
   render() {

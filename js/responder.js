@@ -742,8 +742,12 @@ class FormResponder {
     const revealScore = this.form.settings?.showScoreAfterSubmission !== false;
     const hasEmail = this.respondentEmail && this.respondentEmail !== 'N/A' && this.respondentEmail.includes('@');
 
-    // If score is hidden and candidate didn't provide email, show email capture card
+    // If score is hidden and candidate didn't provide contact info, show contact capture card
     if (!revealScore && !isSurvey) {
+      const hasAnyContact = (this.respondentEmail && this.respondentEmail !== 'N/A') || 
+                            (this.respondentPhone && this.respondentPhone !== 'N/A') || 
+                            (this.respondentTelegram && this.respondentTelegram !== 'N/A');
+
       root.innerHTML = `
         <div class="results-screen-container">
           <div class="results-hero-card hero-passed">
@@ -755,26 +759,37 @@ class FormResponder {
               Your answers have been recorded. Scores are currently withheld by the examiner and will be reviewed and sent directly to you.
             </p>
 
-            ${!hasEmail ? `
+            ${!hasAnyContact ? `
               <div class="email-capture-box" style="background: var(--bg-surface-subtle); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.5rem 0; text-align: left;">
                 <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-                  <span style="color:var(--primary);">${icon('mail', 20)}</span>
-                  <strong style="font-size:1.05rem; color:var(--text-main);">Where should we send your score?</strong>
+                  <span style="color:var(--primary);">${icon('send', 20)}</span>
+                  <strong style="font-size:1.05rem; color:var(--text-main);">Where should we send your results?</strong>
                 </div>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-                  You did not enter an email address before starting. Enter your email below so the instructor can deliver your graded results and feedback.
+                  Please enter your WhatsApp phone number, Telegram handle, or Email so your graded report can be dispatched directly to you.
                 </p>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                  <input type="email" id="post_submission_email" class="form-input" placeholder="student@example.com" style="flex:1; min-width:220px;" />
-                  <button type="button" class="btn btn-primary" onclick="Responder.savePostSubmissionEmail('${responseRecord.id}')">
-                    Save Email & Finish
-                  </button>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1rem;">
+                  <div>
+                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('whatsapp', 13)}</span> WhatsApp Phone</label>
+                    <input type="tel" id="post_resp_phone" class="form-input" placeholder="+234..." />
+                  </div>
+                  <div>
+                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('telegram', 13)}</span> Telegram (@user / phone)</label>
+                    <input type="text" id="post_resp_telegram" class="form-input" placeholder="@john_doe" />
+                  </div>
+                  <div>
+                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('mail', 13)}</span> Email Address</label>
+                    <input type="email" id="post_resp_email" class="form-input" placeholder="student@example.com" />
+                  </div>
                 </div>
-                <div id="post_email_msg" style="margin-top:0.5rem; font-size:0.82rem;"></div>
+                <button type="button" class="btn btn-primary" onclick="Responder.savePostSubmissionContacts('${responseRecord.id}')">
+                  Save Delivery Channels & Finish
+                </button>
+                <div id="post_contact_msg" style="margin-top:0.6rem; font-size:0.85rem;"></div>
               </div>
             ` : `
               <div class="alert-box alert-success" style="margin: 1.5rem 0; text-align: left;">
-                <span style="vertical-align:-2px;">${icon('check', 16)}</span> Graded results and feedback will be sent to <strong>${Utils.escapeHTML(this.respondentEmail)}</strong> once finalized.
+                <span style="vertical-align:-2px;">${icon('check', 16)}</span> Graded results and feedback will be sent directly to your saved contact channels once finalized.
               </div>
             `}
 
@@ -876,37 +891,47 @@ class FormResponder {
     `;
   }
 
-  async savePostSubmissionEmail(responseId) {
-    const input = document.getElementById('post_submission_email');
-    const msg = document.getElementById('post_email_msg');
-    if (!input) return;
+  async savePostSubmissionContacts(responseId) {
+    const phoneInput = document.getElementById('post_resp_phone');
+    const tgInput = document.getElementById('post_resp_telegram');
+    const emailInput = document.getElementById('post_resp_email');
+    const msg = document.getElementById('post_contact_msg');
 
-    const email = input.value.trim();
-    if (!email || !email.includes('@')) {
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const tg = tgInput ? tgInput.value.trim().replace(/^@/, '') : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+
+    if (!phone && !tg && !email) {
       if (msg) {
-        msg.innerHTML = '<span class="text-danger">Please enter a valid email address.</span>';
+        msg.innerHTML = '<span class="text-danger">Please enter at least one contact method (WhatsApp, Telegram, or Email).</span>';
       }
       return;
     }
 
-    this.respondentEmail = email;
+    this.respondentPhone = phone || this.respondentPhone;
+    this.respondentTelegram = tg || this.respondentTelegram;
+    this.respondentEmail = email || this.respondentEmail;
 
     // Update response in DB and Supabase Cloud
     try {
       const all = await DB.getAllResponses();
       const existing = all.find(r => r.id === responseId);
       if (existing) {
-        existing.respondentEmail = email;
+        if (phone) existing.respondentPhone = phone;
+        if (tg) existing.respondentTelegram = tg;
+        if (email) existing.respondentEmail = email;
         await DB.saveResponse(existing);
       }
 
       if (msg) {
-        msg.innerHTML = `<span class="text-success">${icon('check', 14)} Email saved! Results will be dispatched to <strong>${Utils.escapeHTML(email)}</strong>.</span>`;
+        msg.innerHTML = `<span class="text-success">${icon('check', 14)} Contact details saved successfully! The examiner will dispatch your results.</span>`;
       }
-      input.disabled = true;
-      Utils.showToast('Email address recorded!', 'success');
+      if (phoneInput) phoneInput.disabled = true;
+      if (tgInput) tgInput.disabled = true;
+      if (emailInput) emailInput.disabled = true;
+      Utils.showToast('Delivery channels saved!', 'success');
     } catch (e) {
-      console.error('Error saving post-submission email', e);
+      console.error('Error saving post-submission contacts', e);
     }
   }
 
