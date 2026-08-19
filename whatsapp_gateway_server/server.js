@@ -1,12 +1,13 @@
 /**
  * SamForm 100% Free Unified WhatsApp, Telegram & Email Gateway Microservice
  * 
- * 1. WhatsApp Web Gateway: Multi-device Baileys protocol (Scan QR once to link)
+ * 1. WhatsApp Web Gateway: Multi-device Baileys protocol with Supabase Cloud Session Persistence (Permanent 1-time scan!)
  * 2. Telegram MTProto Userbot Gateway: Send messages directly from your personal Telegram account to ANY phone number or username
  * 3. Server-side Email Proxy: Dispatches emails via EmailJS without client browser adblock/CORS network blocks
  */
 
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const { createClient } = require('@supabase/supabase-js');
 const { TelegramClient } = require('telegram');
 const { StringSession } = require('telegram/sessions');
 const express = require('express');
@@ -23,6 +24,48 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const API_SECRET = process.env.API_SECRET || '';
 
+// --- SUPABASE CLOUD SESSION PERSISTENCE ---
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://aakrjnpprxhmaxeqhnsk.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFha3JqbnBwcnhobWF4ZXFobnNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwNjg2NTAsImV4cCI6MjEwMjY0NDY1MH0.rdxVDv1luq2MLfymGMPtPXBSRyWK5ZxAelkPjEctEAU';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const authFolder = path.join(__dirname, 'auth_info_baileys');
+
+// Restore session from Supabase on startup
+async function restoreWhatsAppSessionFromCloud() {
+  try {
+    const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'wa_gateway_auth_session').single();
+    if (data && data.value && typeof data.value === 'object') {
+      if (!fs.existsSync(authFolder)) fs.mkdirSync(authFolder, { recursive: true });
+      for (const [filename, content] of Object.entries(data.value)) {
+        fs.writeFileSync(path.join(authFolder, filename), content);
+      }
+      console.log('⚡ Restored permanent WhatsApp session from Supabase cloud!');
+    }
+  } catch (e) {
+    console.warn('Session cloud restore notice:', e.message);
+  }
+}
+
+// Backup session to Supabase
+async function backupWhatsAppSessionToCloud() {
+  try {
+    if (!fs.existsSync(authFolder)) return;
+    const files = fs.readdirSync(authFolder);
+    const sessionDump = {};
+    for (const file of files) {
+      sessionDump[file] = fs.readFileSync(path.join(authFolder, file), 'utf8');
+    }
+    await supabase.from('app_settings').upsert({
+      key: 'wa_gateway_auth_session',
+      value: sessionDump,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+  } catch (e) {
+    console.warn('Session cloud backup notice:', e.message);
+  }
+}
+
 // --- 1. WHATSAPP GATEWAY CLIENT ---
 let sock;
 let isWhatsAppConnected = false;
@@ -30,7 +73,8 @@ let currentQR = '';
 let currentQRDataUrl = '';
 
 async function startWhatsAppBot() {
-  const authFolder = path.join(__dirname, 'auth_info_baileys');
+  await restoreWhatsAppSessionFromCloud();
+
   const { state, saveCreds } = await useMultiFileAuthState(authFolder);
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
@@ -46,7 +90,10 @@ async function startWhatsAppBot() {
     generateHighQualityLinkPreview: true
   });
 
-  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('creds.update', async () => {
+    await saveCreds();
+    await backupWhatsAppSessionToCloud();
+  });
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
@@ -69,6 +116,7 @@ async function startWhatsAppBot() {
 
       if (isLoggedOut) {
         try { fs.rmSync(authFolder, { recursive: true, force: true }); } catch (e) {}
+        await supabase.from('app_settings').delete().eq('key', 'wa_gateway_auth_session');
       }
 
       setTimeout(() => startWhatsAppBot(), 3000);
@@ -77,6 +125,7 @@ async function startWhatsAppBot() {
       isWhatsAppConnected = true;
       currentQR = '';
       currentQRDataUrl = '';
+      await backupWhatsAppSessionToCloud();
     }
   });
 }
@@ -144,7 +193,7 @@ app.get('/pair', (req, res) => {
         <div class="service-box" style="text-align: center;">
           <h3 style="margin: 0 0 0.5rem 0; color: #25D366;">WhatsApp Gateway</h3>
           ${isWhatsAppConnected ? `
-            <div class="status-badge status-online">✓ WHATSAPP ONLINE & CONNECTED</div>
+            <div class="status-badge status-online">✓ WHATSAPP ONLINE & PERMANENTLY SYNCED</div>
             <p style="font-size: 0.82rem; color: #94a3b8;">Linked and actively sending results.</p>
           ` : `
             <div class="status-badge status-waiting">⏳ WAITING FOR QR SCAN</div>

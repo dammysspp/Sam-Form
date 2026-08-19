@@ -1,12 +1,13 @@
 {
   "name": "samform-gateway",
   "version": "1.0.0",
-  "description": "100% Free Unified WhatsApp & Telegram Userbot Gateway for SamForm Automated Dispatches",
+  "description": "100% Free Unified WhatsApp, Telegram & Email Gateway Microservice for SamForm Automated Dispatches",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
     "@whiskeysockets/baileys": "^6.6.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
