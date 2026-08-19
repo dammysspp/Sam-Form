@@ -33,7 +33,8 @@ const Exporter = {
 
     questions.forEach((q, i) => {
       const opts = (q.options || []).join(' | ');
-      const ans = Array.isArray(q.answer) ? q.answer.join(' | ') : (q.answer || '');
+      const rawAns = Array.isArray(q.answer) ? q.answer.join(' | ') : (q.answer !== undefined && q.answer !== null ? q.answer : '');
+      const ans = String(rawAns);
       rows.push([
         i + 1,
         q.type,
