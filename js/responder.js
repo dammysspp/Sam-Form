@@ -22,19 +22,95 @@ class FormResponder {
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);
-    const formId = urlParams.get('id');
+    let formId = urlParams.get('id');
     this.isPreview = urlParams.get('preview') === 'true';
 
-    if (!formId) {
-      this.renderError('No form ID specified in URL.');
-      return;
+    // If id=demo or no id is specified, generate/load a rich sample assessment
+    if (formId === 'demo' || !formId) {
+      let existingDemo = await DB.getFormById('demo');
+      if (!existingDemo) {
+        existingDemo = {
+          id: 'demo',
+          title: 'SamForm General Knowledge & Diagnostic Assessment',
+          description: 'A comprehensive demonstration assessment testing multiple question types, automatic timers, and instant evaluation.',
+          mode: 'exam',
+          theme: 'indigo',
+          status: 'published',
+          timeLimit: 15,
+          passingScore: 70,
+          settings: {
+            enableTimer: true,
+            showScoreAfterSubmission: true,
+            randomizeQuestions: false,
+            randomizeOptions: false,
+            negativeMarking: 0
+          },
+          sections: [{ id: 'sec-1', title: 'General Assessment' }],
+          questions: [
+            {
+              id: 'q_demo_1',
+              sectionId: 'sec-1',
+              type: QuestionTypes.MULTIPLE_CHOICE,
+              question: 'Which protocol is standard for secure web transmission?',
+              options: ['HTTP', 'HTTPS', 'FTP', 'Telnet'],
+              answer: 'HTTPS',
+              points: 5,
+              explanation: 'HTTPS encrypts data in transit using TLS/SSL.'
+            },
+            {
+              id: 'q_demo_2',
+              sectionId: 'sec-1',
+              type: QuestionTypes.CHECKBOXES,
+              question: 'Select all cloud and storage technologies utilized by SamForm:',
+              options: ['IndexedDB (Offline Storage)', 'Supabase Cloud Database', 'Cassandra DB', 'Service Worker PWA Cache'],
+              answer: ['IndexedDB (Offline Storage)', 'Supabase Cloud Database', 'Service Worker PWA Cache'],
+              points: 10,
+              explanation: 'SamForm operates offline-first with IndexedDB and syncs to Supabase Cloud.'
+            },
+            {
+              id: 'q_demo_3',
+              sectionId: 'sec-1',
+              type: QuestionTypes.TRUE_FALSE,
+              question: 'Candidates require administrative credentials to access and submit an assessment.',
+              answer: 'False',
+              points: 5,
+              explanation: 'Public assessment links (responder.html) are open to candidates without sign-in.'
+            },
+            {
+              id: 'q_demo_4',
+              sectionId: 'sec-1',
+              type: QuestionTypes.SHORT_ANSWER,
+              question: 'What is the full name of the organization that created SamForm?',
+              answer: 'Samsco Communications',
+              points: 10,
+              explanation: 'SamForm is engineered with excellence by Samsco Communications.'
+            },
+            {
+              id: 'q_demo_5',
+              sectionId: 'sec-1',
+              type: QuestionTypes.ESSAY,
+              question: 'Explain the benefits of offline-first assessment software for remote educational institutions.',
+              points: 15,
+              explanation: 'Essays are reviewed manually by instructors in the SamForm review console.'
+            }
+          ]
+        };
+        await DB.saveForm(existingDemo);
+      }
+      this.form = existingDemo;
+    } else {
+      this.form = await DB.getFormById(formId);
     }
 
-    this.form = await DB.getFormById(formId);
-
     if (!this.form) {
-      this.renderError('Assessment or form could not be found in storage.');
-      return;
+      // Fallback: check if any forms exist in DB
+      const all = await DB.getAllForms();
+      if (all.length > 0) {
+        this.form = all[0];
+      } else {
+        this.renderError('Assessment or form could not be found in storage. Please launch an assessment from the dashboard or Builder.');
+        return;
+      }
     }
 
     // Check status if closed or max responses reached
