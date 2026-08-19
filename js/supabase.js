@@ -183,11 +183,12 @@ const FormForgeSupabase = {
   async fetchResponsesForFormFromCloud(formId) {
     if (!this.isReady()) return [];
     try {
+      const deletedIds = await this.getDeletedResponseIds();
       const { data, error } = await this.client.from('responses').select('*').eq('form_id', formId).order('submitted_at', { ascending: false });
       if (error || !data) return [];
 
       return data
-        .filter(d => !(d.answers && d.answers._metadata && d.answers._metadata.is_deleted === true))
+        .filter(d => !deletedIds.includes(d.id) && !(d.answers && d.answers._metadata && d.answers._metadata.is_deleted === true))
         .map(d => {
           const answersObj = d.answers || {};
           const meta = answersObj._metadata || {};
@@ -218,11 +219,12 @@ const FormForgeSupabase = {
   async fetchAllResponsesFromCloud() {
     if (!this.isReady()) return [];
     try {
+      const deletedIds = await this.getDeletedResponseIds();
       const { data, error } = await this.client.from('responses').select('*').order('submitted_at', { ascending: false });
       if (error || !data) return [];
 
       return data
-        .filter(d => !(d.answers && d.answers._metadata && d.answers._metadata.is_deleted === true))
+        .filter(d => !deletedIds.includes(d.id) && !(d.answers && d.answers._metadata && d.answers._metadata.is_deleted === true))
         .map(d => {
           const answersObj = d.answers || {};
           const meta = answersObj._metadata || {};
@@ -264,20 +266,36 @@ const FormForgeSupabase = {
     }
   },
 
+  async getDeletedResponseIds() {
+    try {
+      const list = await this.fetchSettingsFromCloud('deleted_response_ids');
+      return Array.isArray(list) ? list : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  async markResponseAsDeleted(responseId) {
+    try {
+      const current = await this.getDeletedResponseIds();
+      if (!current.includes(responseId)) {
+        current.push(responseId);
+        await this.syncSettingsToCloud('deleted_response_ids', current);
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
   async deleteResponseFromCloud(responseId) {
     if (!this.isReady()) return false;
     try {
       // 1. Try direct SQL row delete
       await this.client.from('responses').delete().eq('id', responseId);
 
-      // 2. Also set soft-delete metadata flag in case Supabase RLS restricts hard DELETE
-      const { data } = await this.client.from('responses').select('answers').eq('id', responseId).single();
-      if (data) {
-        const answersObj = data.answers || {};
-        if (!answersObj._metadata) answersObj._metadata = {};
-        answersObj._metadata.is_deleted = true;
-        await this.client.from('responses').update({ answers: answersObj }).eq('id', responseId);
-      }
+      // 2. Mark in global deleted registry in app_settings (Bypasses all PostgreSQL table locks & RLS!)
+      await this.markResponseAsDeleted(responseId);
 
       return true;
     } catch (err) {
