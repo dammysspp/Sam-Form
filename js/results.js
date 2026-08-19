@@ -861,7 +861,14 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    let phone = (resp.respondentPhone || '').replace(/[^0-9]/g, '');
+    // Read live input from modal if available, otherwise record
+    const inputEl = document.getElementById(`disp_phone_${responseId}`);
+    let rawPhone = inputEl ? inputEl.value : (resp.respondentPhone || '');
+    let phone = rawPhone.replace(/[^0-9]/g, '');
+
+    if (rawPhone && rawPhone !== resp.respondentPhone) {
+      await this.updateCandidateContact(responseId, 'respondentPhone', rawPhone);
+    }
 
     // 1. Try automated background gateway if configured
     if (window.BotDispatcherInstance) {
@@ -898,7 +905,13 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    let tg = (resp.respondentTelegram || '').trim().replace(/^@/, '');
+    const inputEl = document.getElementById(`disp_tg_${responseId}`);
+    let rawTg = inputEl ? inputEl.value : (resp.respondentTelegram || '');
+    let tg = rawTg.trim().replace(/^@/, '');
+
+    if (rawTg && rawTg !== resp.respondentTelegram) {
+      await this.updateCandidateContact(responseId, 'respondentTelegram', rawTg);
+    }
 
     // 1. Try automated background Telegram Bot API if configured
     if (window.BotDispatcherInstance) {
@@ -910,7 +923,9 @@ class FormResults {
           Utils.showToast(`✓ Graded result sent to Telegram (@${tg})!`, 'success');
           return;
         } else if (!res.fallback) {
-          console.warn('[Results] Telegram bot error, opening direct chat:', res.reason);
+          console.warn('[Results] Telegram bot notice:', res.reason);
+          Utils.showToast(res.reason, 'warning', 4500);
+          return;
         }
       }
     }
@@ -936,7 +951,14 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    const email = resp.respondentEmail && resp.respondentEmail !== 'N/A' ? resp.respondentEmail : '';
+    const inputEl = document.getElementById(`disp_email_${responseId}`);
+    let rawEmail = inputEl ? inputEl.value.trim() : (resp.respondentEmail || '');
+
+    if (rawEmail && rawEmail !== resp.respondentEmail) {
+      await this.updateCandidateContact(responseId, 'respondentEmail', rawEmail);
+    }
+
+    const email = rawEmail && rawEmail !== 'N/A' ? rawEmail : '';
     if (!email || !email.includes('@')) {
       Utils.showToast('Candidate provided no valid email address.', 'warning');
       return;
@@ -953,6 +975,7 @@ class FormResults {
           return;
         } else {
           console.warn('[Results] EmailJS dispatch error, falling back to mail client:', res.reason);
+          Utils.showToast(`EmailJS Notice: ${res.reason}`, 'warning', 4000);
         }
       }
     }
