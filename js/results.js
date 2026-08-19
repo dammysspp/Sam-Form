@@ -739,13 +739,37 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    // First ensure current inputs are captured
-    await this.saveDraftReview(responseId);
+    // Collect all inputs currently open in the modal and ensure manualGrades has entries
+    const questions = this.form.questions || [];
+    if (!resp.manualGrades) resp.manualGrades = {};
 
-    // Force mark all manual questions as graded
-    if (resp.scoring) {
-      resp.scoring.isFullyGraded = true;
-    }
+    questions.forEach(q => {
+      const ptsInput = document.getElementById(`manual_pts_${q.id}`);
+      const commentInput = document.getElementById(`manual_comment_${q.id}`);
+      if (ptsInput) {
+        resp.manualGrades[q.id] = {
+          earnedPoints: parseFloat(ptsInput.value) || 0,
+          comment: commentInput ? commentInput.value.trim() : '',
+          gradedAt: new Date().toISOString()
+        };
+      } else if (!resp.manualGrades[q.id]) {
+        // Default unreviewed manual questions to 0 so they are marked as reviewed
+        resp.manualGrades[q.id] = {
+          earnedPoints: 0,
+          comment: 'Finalized by examiner',
+          gradedAt: new Date().toISOString()
+        };
+      }
+    });
+
+    // Recalculate total scoring
+    resp.scoring = ScoringEngine.calculateTotalResults(this.form, resp.answers || {}, resp.manualGrades);
+    resp.scoring.isFullyGraded = true;
+    resp.scoring.pendingManualCount = 0;
+
+    const remarkData = ScoringEngine.getRemarkForScore(resp.scoring.percentage, this.form.settings?.remarks);
+    resp.scoring.grade = remarkData.grade;
+    resp.scoring.remark = remarkData.text;
 
     await DB.saveResponse(resp);
     await this.reloadResponses();
@@ -763,7 +787,7 @@ class FormResults {
       this.inspectResponse(resp.id);
     }
 
-    Utils.showToast(`✓ Assessment Approved & Finalized! Score: ${resp.scoring?.score}/${resp.scoring?.maxScore} (${resp.scoring?.percentage}%)`, 'success', 4000);
+    Utils.showToast(`✓ Assessment Approved & Finalized! Score: ${resp.scoring.score}/${resp.scoring.maxScore} (${resp.scoring.percentage}%) [Grade: ${resp.scoring.grade}]`, 'success', 4000);
   }
 
   // Update candidate contact info live
