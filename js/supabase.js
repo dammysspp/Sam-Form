@@ -148,6 +148,13 @@ const FormForgeSupabase = {
   async submitResponseToCloud(resp) {
     if (!this.isReady()) return null;
     try {
+      // Store custom phone and telegram safely inside answers._metadata so Supabase doesn't reject missing columns
+      const answersObj = { ...(resp.answers || {}) };
+      answersObj._metadata = {
+        phone: resp.respondentPhone || 'N/A',
+        telegram: resp.respondentTelegram || 'N/A'
+      };
+
       const payload = {
         id: resp.id,
         form_id: resp.formId,
@@ -155,7 +162,7 @@ const FormForgeSupabase = {
         respondent_name: resp.respondentName || 'Anonymous Candidate',
         respondent_email: resp.respondentEmail || 'N/A',
         respondent_id: resp.respondentId || 'N/A',
-        answers: resp.answers || {},
+        answers: answersObj,
         flags: resp.flags || [],
         manual_grades: resp.manualGrades || {},
         duration_seconds: resp.durationSeconds || 0,
@@ -179,21 +186,27 @@ const FormForgeSupabase = {
       const { data, error } = await this.client.from('responses').select('*').eq('form_id', formId).order('submitted_at', { ascending: false });
       if (error || !data) return [];
 
-      return data.map(d => ({
-        id: d.id,
-        formId: d.form_id,
-        formTitle: d.form_title,
-        respondentName: d.respondent_name,
-        respondentEmail: d.respondent_email,
-        respondentId: d.respondent_id,
-        answers: d.answers || {},
-        flags: d.flags || [],
-        manualGrades: d.manual_grades || {},
-        durationSeconds: d.duration_seconds,
-        forcedByTimer: d.forced_by_timer,
-        scoring: d.scoring || {},
-        submittedAt: d.submitted_at
-      }));
+      return data.map(d => {
+        const answersObj = d.answers || {};
+        const meta = answersObj._metadata || {};
+        return {
+          id: d.id,
+          formId: d.form_id,
+          formTitle: d.form_title,
+          respondentName: d.respondent_name,
+          respondentEmail: d.respondent_email,
+          respondentPhone: d.respondent_phone || meta.phone || 'N/A',
+          respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
+          respondentId: d.respondent_id,
+          answers: answersObj,
+          flags: d.flags || [],
+          manualGrades: d.manual_grades || {},
+          durationSeconds: d.duration_seconds,
+          forcedByTimer: d.forced_by_timer,
+          scoring: d.scoring || {},
+          submittedAt: d.submitted_at
+        };
+      });
     } catch (err) {
       console.warn('Cloud fetch responses error:', err);
       return [];
@@ -206,21 +219,27 @@ const FormForgeSupabase = {
       const { data, error } = await this.client.from('responses').select('*').order('submitted_at', { ascending: false });
       if (error || !data) return [];
 
-      return data.map(d => ({
-        id: d.id,
-        formId: d.form_id,
-        formTitle: d.form_title,
-        respondentName: d.respondent_name,
-        respondentEmail: d.respondent_email,
-        respondentId: d.respondent_id,
-        answers: d.answers || {},
-        flags: d.flags || [],
-        manualGrades: d.manual_grades || {},
-        durationSeconds: d.duration_seconds,
-        forcedByTimer: d.forced_by_timer,
-        scoring: d.scoring || {},
-        submittedAt: d.submitted_at
-      }));
+      return data.map(d => {
+        const answersObj = d.answers || {};
+        const meta = answersObj._metadata || {};
+        return {
+          id: d.id,
+          formId: d.form_id,
+          formTitle: d.form_title,
+          respondentName: d.respondent_name,
+          respondentEmail: d.respondent_email,
+          respondentPhone: d.respondent_phone || meta.phone || 'N/A',
+          respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
+          respondentId: d.respondent_id,
+          answers: answersObj,
+          flags: d.flags || [],
+          manualGrades: d.manual_grades || {},
+          durationSeconds: d.duration_seconds,
+          forcedByTimer: d.forced_by_timer,
+          scoring: d.scoring || {},
+          submittedAt: d.submitted_at
+        };
+      });
     } catch (err) {
       console.warn('Cloud fetch all responses error:', err);
       return [];
