@@ -588,8 +588,18 @@ class FormResults {
             }).join('')}
           </div>
         </div>
-        <div class="modal-footer" style="padding:1rem 1.5rem; background:var(--bg-surface-subtle); border-top:1px solid var(--border-color);">
-          <button class="btn btn-secondary" onclick="Results.closeInspector()">Close</button>
+        <div class="modal-footer" style="padding:1rem 1.5rem; background:var(--bg-surface-subtle); border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+          <div>
+            <button class="btn btn-secondary" onclick="Results.closeInspector()">Close</button>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="button" class="btn btn-outline" onclick="Results.saveDraftReview('${resp.id}')" title="Save current grading marks without finalizing">
+              💾 Save Draft Review
+            </button>
+            <button type="button" class="btn btn-success" onclick="Results.approveAndFinalize('${resp.id}')" style="background:#10b981; border-color:#059669; color:#ffffff; font-weight:700;">
+              ✓ Approve & Finalize Score
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -659,11 +669,6 @@ class FormResults {
     await this.reloadResponses();
     this.render();
 
-    // If fully graded and auto-dispatch is enabled, send via configured bots
-    if (resp.scoring?.isFullyGraded && window.BotDispatcherInstance) {
-      BotDispatcherInstance.autoDispatchAll(this.form, resp);
-    }
-
     // Refresh modal summary KPI numbers
     const modal = document.getElementById(`inspect_modal_${resp.id}`);
     if (modal) {
@@ -672,6 +677,74 @@ class FormResults {
     }
 
     Utils.showToast('Manual mark saved! Result updated.', 'success');
+  }
+
+  // Save draft review without sending notifications
+  async saveDraftReview(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    // Collect all inputs currently open in the modal
+    const questions = this.form.questions || [];
+    if (!resp.manualGrades) resp.manualGrades = {};
+
+    questions.forEach(q => {
+      const ptsInput = document.getElementById(`manual_pts_${q.id}`);
+      const commentInput = document.getElementById(`manual_comment_${q.id}`);
+      if (ptsInput) {
+        resp.manualGrades[q.id] = {
+          earnedPoints: parseFloat(ptsInput.value) || 0,
+          comment: commentInput ? commentInput.value.trim() : '',
+          gradedAt: new Date().toISOString()
+        };
+      }
+    });
+
+    resp.scoring = ScoringEngine.calculateTotalResults(this.form, resp.answers || {}, resp.manualGrades);
+    await DB.saveResponse(resp);
+    await this.reloadResponses();
+    this.render();
+
+    // Refresh modal
+    const modal = document.getElementById(`inspect_modal_${resp.id}`);
+    if (modal) {
+      modal.remove();
+      this.inspectResponse(resp.id);
+    }
+
+    Utils.showToast('Draft review marks saved! (Not yet finalized)', 'info');
+  }
+
+  // Approve & Finalize Score (Marks submission as fully graded and triggers automated dispatch)
+  async approveAndFinalize(responseId) {
+    const resp = this.responses.find(r => r.id === responseId);
+    if (!resp) return;
+
+    // First ensure current inputs are captured
+    await this.saveDraftReview(responseId);
+
+    // Force mark all manual questions as graded
+    if (resp.scoring) {
+      resp.scoring.isFullyGraded = true;
+    }
+
+    await DB.saveResponse(resp);
+    await this.reloadResponses();
+    this.render();
+
+    // Trigger automated multi-channel dispatch if configured
+    if (window.BotDispatcherInstance) {
+      BotDispatcherInstance.autoDispatchAll(this.form, resp);
+    }
+
+    // Refresh modal
+    const modal = document.getElementById(`inspect_modal_${resp.id}`);
+    if (modal) {
+      modal.remove();
+      this.inspectResponse(resp.id);
+    }
+
+    Utils.showToast(`✓ Assessment Approved & Finalized! Score: ${resp.scoring?.score}/${resp.scoring?.maxScore} (${resp.scoring?.percentage}%)`, 'success', 4000);
   }
 
   async deleteResponse(responseId) {
@@ -730,41 +803,71 @@ class FormResults {
     return text;
   }
 
-  dispatchWhatsApp(responseId) {
+  async dispatchWhatsApp(responseId) {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    let phone = resp.respondentPhone || '';
-    phone = phone.replace(/[^0-9]/g, ''); // Clean to pure numbers
+    let phone = (resp.respondentPhone || '').replace(/[^0-9]/g, '');
 
+    // 1. Try automated background gateway if configured
+    if (window.BotDispatcherInstance) {
+      const cfg = BotDispatcherInstance.getConfig();
+      if (cfg.whatsappGatewayUrl && phone) {
+        Utils.showToast('Sending automated WhatsApp via Gateway...', 'info');
+        const res = await BotDispatcherInstance.sendWhatsAppMessage(phone, this.generateScoreReportText(resp));
+        if (res.success) {
+          Utils.showToast(`✓ Graded result sent to WhatsApp (+${phone})!`, 'success');
+          return;
+        } else if (!res.fallback) {
+          console.warn('[Results] WhatsApp gateway error, opening direct chat:', res.reason);
+        }
+      }
+    }
+
+    // 2. Direct 1-tap WhatsApp link fallback
     const msg = this.generateScoreReportText(resp);
     const encodedMsg = encodeURIComponent(msg);
 
     let url = '';
     if (phone) {
-      url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`;
+      url = `https://wa.me/${phone}?text=${encodedMsg}`;
     } else {
       url = `https://api.whatsapp.com/send?text=${encodedMsg}`;
       Utils.showToast('Candidate provided no phone number. Select contact in WhatsApp.', 'info');
     }
 
     window.open(url, '_blank');
-    Utils.showToast('Opening WhatsApp DM with candidate score card...', 'success');
+    Utils.showToast('Opening WhatsApp with candidate score card...', 'success');
   }
 
-  dispatchTelegram(responseId) {
+  async dispatchTelegram(responseId) {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
     let tg = (resp.respondentTelegram || '').trim().replace(/^@/, '');
+
+    // 1. Try automated background Telegram Bot API if configured
+    if (window.BotDispatcherInstance) {
+      const cfg = BotDispatcherInstance.getConfig();
+      if (cfg.telegramBotToken && tg) {
+        Utils.showToast('Sending automated Telegram via Bot API...', 'info');
+        const res = await BotDispatcherInstance.sendTelegramMessage(tg, this.generateScoreReportText(resp));
+        if (res.success) {
+          Utils.showToast(`✓ Graded result sent to Telegram (@${tg})!`, 'success');
+          return;
+        } else if (!res.fallback) {
+          console.warn('[Results] Telegram bot error, opening direct chat:', res.reason);
+        }
+      }
+    }
+
+    // 2. Direct Telegram DM / Share fallback
     const msg = this.generateScoreReportText(resp);
     const encodedMsg = encodeURIComponent(msg);
 
     let url = '';
     if (tg && !tg.startsWith('+') && isNaN(tg)) {
-      // Direct user handle: open user chat or share
       url = `https://t.me/${tg}`;
-      // Copy to clipboard so examiner can paste instantly in the chat
       navigator.clipboard.writeText(msg);
       Utils.showToast(`Opening @${tg} in Telegram. Formatted score copied to clipboard!`, 'success', 3500);
     } else {
@@ -812,30 +915,38 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    // Trigger full automated bot dispatch
+    // 1. Run automated background dispatches (WhatsApp Gateway, Telegram Bot, EmailJS)
     if (window.BotDispatcherInstance) {
-      BotDispatcherInstance.autoDispatchAll(this.form, resp);
+      const botRes = await BotDispatcherInstance.autoDispatchAll(this.form, resp);
+      let autoCount = 0;
+      if (botRes.whatsapp?.success) autoCount++;
+      if (botRes.telegram?.success) autoCount++;
+      if (botRes.emailjs?.success) autoCount++;
+
+      if (autoCount > 0) {
+        Utils.showToast(`✓ Dispatched automatically to ${autoCount} connected channel(s)!`, 'success');
+        return;
+      }
     }
 
+    // 2. If no automated bot is connected, trigger direct manual 1-tap dispatches sequentially
     let dispatched = 0;
     if (resp.respondentPhone && resp.respondentPhone !== 'N/A') {
       this.dispatchWhatsApp(responseId);
       dispatched++;
     }
     if (resp.respondentEmail && resp.respondentEmail !== 'N/A' && resp.respondentEmail.includes('@')) {
-      setTimeout(() => this.dispatchEmail(responseId), 800);
+      setTimeout(() => this.dispatchEmail(responseId), 500);
       dispatched++;
     }
     if (resp.respondentTelegram && resp.respondentTelegram !== 'N/A') {
-      setTimeout(() => this.dispatchTelegram(responseId), 1600);
+      setTimeout(() => this.dispatchTelegram(responseId), 1000);
       dispatched++;
     }
 
     if (dispatched === 0) {
       this.copyScoreCardText(responseId);
-      Utils.showToast('No contact saved. Formatted score report copied to clipboard!', 'warning');
-    } else {
-      Utils.showToast(`Broadcasting score via ${dispatched} candidate channel(s)!`, 'success');
+      Utils.showToast('No candidate contact saved. Formatted report copied to clipboard!', 'warning');
     }
   }
 
