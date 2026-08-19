@@ -1,6 +1,7 @@
 const FormForgeAuth = {
   SESSION_KEY: 'formforge_admin_auth',
   AUTH_TIMESTAMP_KEY: 'formforge_admin_auth_time',
+  DEV_MODE_KEY: 'formforge_dev_godmode',
   
   // SHA-256 Cryptographic Hashes (one-way digest)
   AUTH_HASHES: {
@@ -24,6 +25,29 @@ const FormForgeAuth = {
     return isAuth;
   },
 
+  isDevMode() {
+    return this.isAuthenticated() && (sessionStorage.getItem(this.DEV_MODE_KEY) === 'true' || localStorage.getItem(this.DEV_MODE_KEY) === 'true');
+  },
+
+  toggleDevMode() {
+    if (!this.isAuthenticated()) return;
+    const current = this.isDevMode();
+    const next = !current;
+    sessionStorage.setItem(this.DEV_MODE_KEY, String(next));
+    localStorage.setItem(this.DEV_MODE_KEY, String(next));
+    
+    if (next) {
+      if (window.DevConsole) DevConsole.init();
+      if (window.Utils) Utils.showToast('Developer God Mode Activated', 'success');
+    } else {
+      const panel = document.getElementById('samform_godmode_overlay');
+      if (panel) panel.remove();
+      const badge = document.getElementById('samform_godmode_floating_btn');
+      if (badge) badge.remove();
+      if (window.Utils) Utils.showToast('Developer God Mode Deactivated', 'info');
+    }
+  },
+
   // Enforce authentication gate on protected pages
   guard() {
     // If we are on responder.html (the candidate exam/quiz link), no sign-in is required!
@@ -36,10 +60,38 @@ const FormForgeAuth = {
       this.showLoginModal();
       return false;
     }
+
+    // If authenticated, attach GodMode trigger & console if active
+    setTimeout(() => {
+      this.initGodModeUI();
+    }, 100);
+
     return true;
   },
 
-  // Show beautiful login modal
+  initGodModeUI() {
+    if (!this.isAuthenticated()) return;
+
+    // Attach secret keyboard shortcut: Ctrl+Shift+D or `~ (tilde) 3 times
+    if (!window._godmode_bound) {
+      window._godmode_bound = true;
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+          e.preventDefault();
+          this.toggleDevMode();
+        }
+      });
+    }
+
+    // If Dev mode is enabled, mount the unobtrusive floating HUD
+    if (this.isDevMode()) {
+      if (window.DevConsole) {
+        DevConsole.init();
+      }
+    }
+  },
+
+  // Show login modal
   showLoginModal() {
     const existing = document.getElementById('ff_admin_auth_modal');
     if (existing) return;
@@ -187,6 +239,8 @@ const FormForgeAuth = {
     sessionStorage.removeItem(this.SESSION_KEY);
     localStorage.removeItem(this.SESSION_KEY);
     localStorage.removeItem(this.AUTH_TIMESTAMP_KEY);
+    sessionStorage.removeItem(this.DEV_MODE_KEY);
+    localStorage.removeItem(this.DEV_MODE_KEY);
     window.location.href = 'index.html';
   }
 };

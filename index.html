@@ -40,7 +40,10 @@
         <a href="builder.html" class="btn btn-primary">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Create New Form
         </a>
-        <button class="btn btn-outline btn-sm" onclick="FormForgeAuth.logout()" title="Sign Out Admin" style="margin-left: 0.5rem;">
+        <button class="btn btn-outline btn-sm" onclick="FormForgeAuth.toggleDevMode()" title="Developer God Mode Console (Ctrl+Shift+D)" style="border-color:#6366f1; color:#4f46e5;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Dev Mode
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="FormForgeAuth.logout()" title="Sign Out Admin" style="margin-left: 0.25rem;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Sign Out
         </button>
       </div>
@@ -149,6 +152,7 @@
   <script src="js/exporter.js"></script>
   <script src="js/scoring.js"></script>
   <script src="js/builder.js"></script>
+  <script src="js/devmode.js"></script>
   <script src="js/app.js"></script>
 
   <script>
