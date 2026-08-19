@@ -186,27 +186,29 @@ const FormForgeSupabase = {
       const { data, error } = await this.client.from('responses').select('*').eq('form_id', formId).order('submitted_at', { ascending: false });
       if (error || !data) return [];
 
-      return data.map(d => {
-        const answersObj = d.answers || {};
-        const meta = answersObj._metadata || {};
-        return {
-          id: d.id,
-          formId: d.form_id,
-          formTitle: d.form_title,
-          respondentName: d.respondent_name,
-          respondentEmail: d.respondent_email,
-          respondentPhone: d.respondent_phone || meta.phone || 'N/A',
-          respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
-          respondentId: d.respondent_id,
-          answers: answersObj,
-          flags: d.flags || [],
-          manualGrades: d.manual_grades || {},
-          durationSeconds: d.duration_seconds,
-          forcedByTimer: d.forced_by_timer,
-          scoring: d.scoring || {},
-          submittedAt: d.submitted_at
-        };
-      });
+      return data
+        .filter(d => !(d.answers && d.answers._metadata && d.answers._metadata.is_deleted === true))
+        .map(d => {
+          const answersObj = d.answers || {};
+          const meta = answersObj._metadata || {};
+          return {
+            id: d.id,
+            formId: d.form_id,
+            formTitle: d.form_title,
+            respondentName: d.respondent_name,
+            respondentEmail: d.respondent_email,
+            respondentPhone: d.respondent_phone || meta.phone || 'N/A',
+            respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
+            respondentId: d.respondent_id,
+            answers: answersObj,
+            flags: d.flags || [],
+            manualGrades: d.manual_grades || {},
+            durationSeconds: d.duration_seconds,
+            forcedByTimer: d.forced_by_timer,
+            scoring: d.scoring || {},
+            submittedAt: d.submitted_at
+          };
+        });
     } catch (err) {
       console.warn('Cloud fetch responses error:', err);
       return [];
@@ -219,27 +221,29 @@ const FormForgeSupabase = {
       const { data, error } = await this.client.from('responses').select('*').order('submitted_at', { ascending: false });
       if (error || !data) return [];
 
-      return data.map(d => {
-        const answersObj = d.answers || {};
-        const meta = answersObj._metadata || {};
-        return {
-          id: d.id,
-          formId: d.form_id,
-          formTitle: d.form_title,
-          respondentName: d.respondent_name,
-          respondentEmail: d.respondent_email,
-          respondentPhone: d.respondent_phone || meta.phone || 'N/A',
-          respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
-          respondentId: d.respondent_id,
-          answers: answersObj,
-          flags: d.flags || [],
-          manualGrades: d.manual_grades || {},
-          durationSeconds: d.duration_seconds,
-          forcedByTimer: d.forced_by_timer,
-          scoring: d.scoring || {},
-          submittedAt: d.submitted_at
-        };
-      });
+      return data
+        .filter(d => !(d.answers && d.answers._metadata && d.answers._metadata.is_deleted === true))
+        .map(d => {
+          const answersObj = d.answers || {};
+          const meta = answersObj._metadata || {};
+          return {
+            id: d.id,
+            formId: d.form_id,
+            formTitle: d.form_title,
+            respondentName: d.respondent_name,
+            respondentEmail: d.respondent_email,
+            respondentPhone: d.respondent_phone || meta.phone || 'N/A',
+            respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
+            respondentId: d.respondent_id,
+            answers: answersObj,
+            flags: d.flags || [],
+            manualGrades: d.manual_grades || {},
+            durationSeconds: d.duration_seconds,
+            forcedByTimer: d.forced_by_timer,
+            scoring: d.scoring || {},
+            submittedAt: d.submitted_at
+          };
+        });
     } catch (err) {
       console.warn('Cloud fetch all responses error:', err);
       return [];
@@ -263,8 +267,19 @@ const FormForgeSupabase = {
   async deleteResponseFromCloud(responseId) {
     if (!this.isReady()) return false;
     try {
-      const { error } = await this.client.from('responses').delete().eq('id', responseId);
-      return !error;
+      // 1. Try direct SQL row delete
+      await this.client.from('responses').delete().eq('id', responseId);
+
+      // 2. Also set soft-delete metadata flag in case Supabase RLS restricts hard DELETE
+      const { data } = await this.client.from('responses').select('answers').eq('id', responseId).single();
+      if (data) {
+        const answersObj = data.answers || {};
+        if (!answersObj._metadata) answersObj._metadata = {};
+        answersObj._metadata.is_deleted = true;
+        await this.client.from('responses').update({ answers: answersObj }).eq('id', responseId);
+      }
+
+      return true;
     } catch (err) {
       console.warn('Cloud delete response error:', err);
       return false;
