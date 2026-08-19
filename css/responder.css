@@ -22,10 +22,30 @@ body.responder-mode {
 .responder-header {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow-sm);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+}
+
+.fixed-top-progress-bar {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3.5px;
+  background: rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.fixed-top-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, #10b981 100%);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .header-container {
@@ -35,7 +55,7 @@ body.responder-mode {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: nowrap;
 }
 
@@ -60,8 +80,43 @@ body.responder-mode {
 .header-status-area {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.6rem;
   flex-shrink: 0;
+}
+
+/* Header Progress Metric */
+.header-progress-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.progress-pct-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.progress-pct-label span {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.header-progress-track {
+  width: 75px;
+  height: 5px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.header-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.35s ease;
 }
 
 /* Timer Pill */
@@ -73,12 +128,11 @@ body.responder-mode {
   background: var(--bg-surface-subtle);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.55rem;
   font-family: var(--font-mono);
   font-size: 0.95rem;
   font-weight: 800;
-  min-width: 80px;
-  max-width: 110px;
+  min-width: 84px;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;

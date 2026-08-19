@@ -261,8 +261,12 @@ class FormResponder {
     const timerDisplay = document.getElementById('timer-display');
     const timerBar = document.getElementById('timer-progress-fill');
     
-    if (timerDisplay) timerDisplay.textContent = `⏱ ${data.formatted}`;
-    if (timerBar) timerBar.style.width = `${data.percent}%`;
+    if (timerDisplay) {
+      timerDisplay.innerHTML = `<span style="vertical-align:-2px;">${icon('clock', 14)}</span> ${data.formatted}`;
+    }
+    if (timerBar) {
+      timerBar.style.width = `${data.percent}%`;
+    }
   }
 
   handleTimerStateChange(state) {
@@ -317,7 +321,7 @@ class FormResponder {
     const progressPercent = totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 0;
 
     root.innerHTML = `
-      ${this.isPreview ? '<div class="preview-mode-banner">👁 PREVIEW MODE — Submissions will not affect real response statistics</div>' : ''}
+      ${this.isPreview ? `<div class="preview-mode-banner">${icon('eye', 14)} PREVIEW MODE — Submissions will not affect real response statistics</div>` : ''}
 
       <header class="responder-header">
         <div class="header-container">
@@ -327,28 +331,40 @@ class FormResponder {
           </div>
 
           <div class="header-status-area">
+            <!-- Fixed Progress Metric -->
+            <div class="header-progress-metric" title="${answeredCount} of ${totalQ} questions answered">
+              <div class="progress-pct-label"><span id="header-progress-val">${progressPercent}%</span> complete</div>
+              <div class="header-progress-track">
+                <div class="header-progress-fill" style="width: ${progressPercent}%;"></div>
+              </div>
+            </div>
+
             ${this.form.settings?.enableTimer && this.form.timeLimit > 0 ? `
-              <div class="timer-pill timer-normal" id="timer-pill">
+              <div class="timer-pill timer-normal" id="timer-pill" title="Time Remaining">
                 <span id="timer-display"><span style="vertical-align:-2px;">${icon('clock', 14)}</span> --:--</span>
                 <div class="timer-bar-track">
                   <div class="timer-bar-fill" id="timer-progress-fill"></div>
                 </div>
               </div>
             ` : ''}
-            <button class="btn btn-sm btn-outline" onclick="Responder.toggleNavigator()">
-              <span style="vertical-align:-1px;">${icon('menu', 14)}</span> Navigator
+            <button class="btn btn-sm btn-outline btn-nav-toggle" onclick="Responder.toggleNavigator()">
+              <span style="vertical-align:-1px;">${icon('menu', 14)}</span> <span class="nav-btn-text">Navigator</span>
             </button>
           </div>
+        </div>
+        <!-- Fixed Overall Progress Line -->
+        <div class="fixed-top-progress-bar">
+          <div class="fixed-top-progress-fill" style="width: ${progressPercent}%;"></div>
         </div>
       </header>
 
       <main class="responder-main-layout">
         <div class="responder-content-column">
-          <!-- Progress Bar Card -->
+          <!-- Section Details Card -->
           <div class="progress-card">
             <div class="progress-info-row">
               <span>Section ${this.currentSectionIndex + 1} of ${sections.length}: <strong>${Utils.escapeHTML(currentSec.title)}</strong></span>
-              <span>${answeredCount} of ${totalQ} answered (${progressPercent}%)</span>
+              <span class="progress-count-pill">${answeredCount} / ${totalQ} Answered (${progressPercent}%)</span>
             </div>
             <div class="progress-track">
               <div class="progress-fill" style="width: ${progressPercent}%;"></div>
@@ -538,6 +554,25 @@ class FormResponder {
         this.studyFeedback[qid] = evalResult;
       }
     }
+
+    // Live update fixed progress widgets without destroying typing focus
+    const totalQ = this.orderedQuestions.length;
+    const answeredCount = Object.keys(this.answers).filter(k => {
+      const val = this.answers[k];
+      return val !== undefined && val !== null && val !== '' && (!Array.isArray(val) || val.length > 0);
+    }).length;
+    const progressPercent = totalQ > 0 ? Math.round((answeredCount / totalQ) * 100) : 0;
+
+    // Update fixed top bar and header percentage indicator
+    const fixedTopFill = document.querySelector('.fixed-top-progress-fill');
+    if (fixedTopFill) fixedTopFill.style.width = `${progressPercent}%`;
+
+    const headerVal = document.getElementById('header-progress-val');
+    if (headerVal) headerVal.textContent = `${progressPercent}%`;
+
+    const headerFill = document.querySelector('.header-progress-fill');
+    if (headerFill) headerFill.style.width = `${progressPercent}%`;
+
     if (shouldReRender) {
       this.render();
     }

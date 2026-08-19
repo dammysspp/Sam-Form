@@ -8,30 +8,54 @@
     padding: 0.6rem 1rem;
   }
 
+  .responder-header {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 999 !important;
+  }
+
   .header-container {
-    padding: 0.5rem 0.75rem;
-    gap: 0.4rem;
+    padding: 0.45rem 0.65rem;
+    gap: 0.35rem;
   }
 
   .brand-title {
-    max-width: 140px;
-    font-size: 0.88rem;
+    max-width: 120px;
+    font-size: 0.84rem;
+  }
+
+  .header-progress-metric {
+    display: flex;
+  }
+
+  .header-progress-track {
+    width: 45px;
+    height: 4px;
+  }
+
+  .progress-pct-label {
+    font-size: 0.68rem;
   }
 
   .timer-pill {
-    min-width: 70px;
-    max-width: 90px;
-    padding: 0.2rem 0.4rem;
-    font-size: 0.82rem;
+    min-width: 66px;
+    max-width: 82px;
+    padding: 0.18rem 0.35rem;
+    font-size: 0.8rem;
   }
 
   .timer-pill #timer-display {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     letter-spacing: -0.02em;
   }
 
+  .btn-nav-toggle .nav-btn-text {
+    display: none;
+  }
+
   .btn-sm {
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.45rem;
     font-size: 0.75rem;
   }
 
