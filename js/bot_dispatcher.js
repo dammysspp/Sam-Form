@@ -218,7 +218,11 @@ class BotDispatcher {
     const templateParams = {
       to_email: toEmail,
       recipient_email: toEmail,
+      email: toEmail,
+      user_email: toEmail,
+      to_name: candidateName,
       candidate_name: candidateName,
+      name: candidateName,
       assessment_title: formTitle,
       score: `${s.score || 0} / ${s.maxScore || 0}`,
       percentage: `${s.percentage || 0}%`,
