@@ -146,11 +146,12 @@ class BotDispatcher {
 
         // If target is a username or not purely numeric, resolve chatId from recent bot updates
         if (isNaN(finalChatId)) {
+          let foundMatchingChat = false;
           try {
             const updatesRes = await fetch(`https://api.telegram.org/bot${cfg.telegramBotToken}/getUpdates`);
             const updatesData = await updatesRes.json();
             if (updatesData.ok && updatesData.result && updatesData.result.length > 0) {
-              // Find matching username in recent updates or pick latest sender
+              // Find STRICT matching username in recent updates
               const match = updatesData.result.reverse().find(u => {
                 const chat = u.message?.chat || u.my_chat_member?.chat;
                 const uname = (chat?.username || '').toLowerCase();
@@ -159,15 +160,18 @@ class BotDispatcher {
 
               if (match) {
                 finalChatId = (match.message?.chat || match.my_chat_member?.chat).id;
-              } else {
-                // If single candidate active, use latest subscriber ID
-                const latest = updatesData.result[0];
-                const chat = latest.message?.chat || latest.my_chat_member?.chat;
-                if (chat?.id) finalChatId = chat.id;
+                foundMatchingChat = true;
               }
             }
           } catch (resErr) {
             console.warn('[BotDispatcher] Could not query getUpdates:', resErr);
+          }
+
+          if (!foundMatchingChat) {
+            return {
+              success: false,
+              reason: `@${cleanTarget} has not started @samscoclawd_bot yet. Ask them to search @samscoclawd_bot on Telegram and tap START.`
+            };
           }
         }
 
