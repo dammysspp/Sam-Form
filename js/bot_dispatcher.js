@@ -225,6 +225,22 @@ class BotDispatcher {
       message: `Your score for ${formTitle} is ${s.score || 0}/${s.maxScore || 0} (${s.percentage || 0}%). Grade: ${s.grade || 'N/A'}. Status: ${statusText}.`
     };
 
+    // 1. Try official EmailJS SDK if loaded on the page
+    if (window.emailjs && typeof window.emailjs.send === 'function') {
+      try {
+        if (typeof window.emailjs.init === 'function') {
+          window.emailjs.init(cfg.emailjsPublicKey);
+        }
+        const res = await window.emailjs.send(cfg.emailjsServiceId, cfg.emailjsTemplateId, templateParams, cfg.emailjsPublicKey);
+        if (res.status === 200 || res.text === 'OK') {
+          return { success: true };
+        }
+      } catch (sdkErr) {
+        console.warn('[BotDispatcher] EmailJS SDK notice:', sdkErr);
+      }
+    }
+
+    // 2. Direct REST API Fallback
     try {
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
