@@ -107,40 +107,65 @@ class BotDispatcher {
     }
   }
 
-  // --- 2. TELEGRAM BOT API DISPATCH ---
+  // --- 2. TELEGRAM DISPATCH (Both Personal MTProto Gateway & Bot API) ---
   async sendTelegramMessage(chatIdOrUser, text) {
     const cfg = this.getConfig();
-    if (!cfg.telegramBotToken) {
-      return { success: false, fallback: true, reason: 'No Telegram Bot Token configured' };
-    }
-
     const cleanTarget = chatIdOrUser.trim().replace(/^@/, '');
     if (!cleanTarget) {
       return { success: false, reason: 'Invalid Telegram identifier' };
     }
 
-    try {
-      const endpoint = `https://api.telegram.org/bot${cfg.telegramBotToken}/sendMessage`;
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: cleanTarget,
-          text: text,
-          parse_mode: 'HTML'
-        })
-      });
+    // 1. Try Gateway Telegram Userbot First (Can message ANY phone number directly without /start!)
+    if (cfg.whatsappGatewayUrl && cfg.telegramApiId && cfg.telegramApiHash) {
+      try {
+        const endpoint = `${cfg.whatsappGatewayUrl.replace(/\/+$/, '')}/send-telegram-user`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phoneOrUsername: cleanTarget,
+            message: text,
+            apiId: cfg.telegramApiId,
+            apiHash: cfg.telegramApiHash
+          })
+        });
 
-      const data = await response.json();
-      if (data.ok) {
-        return { success: true, data };
-      } else {
-        return { success: false, reason: data.description };
+        if (res.ok) {
+          const resData = await res.json();
+          if (resData.success) return { success: true };
+        }
+      } catch (e) {
+        console.warn('[BotDispatcher] Telegram userbot gateway notice:', e.message);
       }
-    } catch (err) {
-      console.error('[BotDispatcher] Telegram Bot error:', err);
-      return { success: false, reason: err.message };
     }
+
+    // 2. Try Telegram Bot API (@BotFather token)
+    if (cfg.telegramBotToken) {
+      try {
+        const endpoint = `https://api.telegram.org/bot${cfg.telegramBotToken}/sendMessage`;
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: cleanTarget,
+            text: text,
+            parse_mode: 'HTML'
+          })
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          return { success: true, data };
+        } else {
+          return { success: false, reason: data.description };
+        }
+      } catch (err) {
+        console.error('[BotDispatcher] Telegram Bot error:', err);
+        return { success: false, reason: err.message };
+      }
+    }
+
+    return { success: false, fallback: true, reason: 'No Telegram Bot Token or Gateway configured' };
   }
 
   // --- 3. EMAILJS AUTOMATION DISPATCH (100% Free Direct REST API) ---
