@@ -148,14 +148,12 @@ const FormForgeSupabase = {
   async submitResponseToCloud(resp) {
     if (!this.isReady()) return null;
     try {
-      const payload = {
+      const corePayload = {
         id: resp.id,
         form_id: resp.formId,
         form_title: resp.formTitle,
         respondent_name: resp.respondentName || 'Anonymous Candidate',
         respondent_email: resp.respondentEmail || 'N/A',
-        respondent_phone: resp.respondentPhone || 'N/A',
-        respondent_telegram: resp.respondentTelegram || 'N/A',
         respondent_id: resp.respondentId || 'N/A',
         answers: resp.answers || {},
         flags: resp.flags || [],
@@ -166,9 +164,21 @@ const FormForgeSupabase = {
         submitted_at: resp.submittedAt || new Date().toISOString()
       };
 
-      // Use upsert so updating an existing response (e.g. adding manual grades or email) doesn't throw 409 conflict
-      const { data, error } = await this.client.from('responses').upsert([payload], { onConflict: 'id' });
-      if (error) throw error;
+      // Try upserting with extra contact columns (respondent_phone, respondent_telegram)
+      const extendedPayload = {
+        ...corePayload,
+        respondent_phone: resp.respondentPhone || 'N/A',
+        respondent_telegram: resp.respondentTelegram || 'N/A'
+      };
+
+      let { error } = await this.client.from('responses').upsert([extendedPayload], { onConflict: 'id' });
+      
+      // If error occurs because columns don't exist in Supabase schema yet (status 400), fallback to core schema
+      if (error) {
+        const fallbackRes = await this.client.from('responses').upsert([corePayload], { onConflict: 'id' });
+        if (fallbackRes.error) throw fallbackRes.error;
+      }
+
       return true;
     } catch (err) {
       console.warn('Cloud submit error (response):', err);
