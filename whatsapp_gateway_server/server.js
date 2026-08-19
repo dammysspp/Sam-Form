@@ -1,8 +1,9 @@
 /**
- * SamForm 100% Free Unified WhatsApp & Telegram Gateway Microservice
+ * SamForm 100% Free Unified WhatsApp, Telegram & Email Gateway Microservice
  * 
  * 1. WhatsApp Web Gateway: Multi-device Baileys protocol (Scan QR once to link)
- * 2. Telegram MTProto Userbot Gateway: Send messages directly from your personal Telegram account to ANY phone number or username without /start requirement!
+ * 2. Telegram MTProto Userbot Gateway: Send messages directly from your personal Telegram account to ANY phone number or username
+ * 3. Server-side Email Proxy: Dispatches emails via EmailJS without client browser adblock/CORS network blocks
  */
 
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, Browsers, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
@@ -83,8 +84,6 @@ async function startWhatsAppBot() {
 // --- 2. TELEGRAM USERBOT CLIENT (MTProto Direct Account) ---
 let tgClient = null;
 let isTelegramUserConnected = false;
-let tgPhoneCodeHash = null;
-let tgPendingPhone = null;
 
 const tgSessionFile = path.join(__dirname, 'tg_session.txt');
 let tgSavedSession = '';
@@ -233,6 +232,38 @@ app.post('/send-telegram-user', async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     console.error('Error sending Telegram user message:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. SERVER-SIDE EMAILJS PROXY ENDPOINT (Bypasses Browser CORS / Adblockers)
+app.post('/send-email', async (req, res) => {
+  const { serviceId, templateId, publicKey, templateParams } = req.body;
+  if (!serviceId || !templateId || !publicKey || !templateParams) {
+    return res.status(400).json({ error: 'Missing email parameters' });
+  }
+
+  try {
+    const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: serviceId,
+        template_id: templateId,
+        user_id: publicKey,
+        template_params: templateParams
+      })
+    });
+
+    if (emailRes.ok) {
+      console.log(`✓ Email sent successfully via EmailJS Proxy to ${templateParams.to_email}`);
+      return res.json({ success: true });
+    } else {
+      const errText = await emailRes.text();
+      return res.status(emailRes.status).json({ error: errText });
+    }
+  } catch (err) {
+    console.error('Server email proxy error:', err);
     return res.status(500).json({ error: err.message });
   }
 });

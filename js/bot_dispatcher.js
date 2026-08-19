@@ -225,7 +225,30 @@ class BotDispatcher {
       message: `Your score for ${formTitle} is ${s.score || 0}/${s.maxScore || 0} (${s.percentage || 0}%). Grade: ${s.grade || 'N/A'}. Status: ${statusText}.`
     };
 
-    // 1. Try official EmailJS SDK if loaded on the page
+    // 1. Try Server-Side Gateway Email Proxy (Bypasses all browser extensions and CORS blocks)
+    if (cfg.whatsappGatewayUrl) {
+      try {
+        const proxyEndpoint = `${cfg.whatsappGatewayUrl.replace(/\/+$/, '')}/send-email`;
+        const proxyRes = await fetch(proxyEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serviceId: cfg.emailjsServiceId,
+            templateId: cfg.emailjsTemplateId,
+            publicKey: cfg.emailjsPublicKey,
+            templateParams: templateParams
+          })
+        });
+
+        if (proxyRes.ok) {
+          return { success: true };
+        }
+      } catch (proxyErr) {
+        console.warn('[BotDispatcher] Email gateway proxy notice:', proxyErr);
+      }
+    }
+
+    // 2. Try official EmailJS SDK if loaded on the page
     if (window.emailjs && typeof window.emailjs.send === 'function') {
       try {
         if (typeof window.emailjs.init === 'function') {
