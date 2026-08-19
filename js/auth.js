@@ -1,8 +1,7 @@
-/**
+//**
  * FormForge Admin Authentication Gate
- * Credentials:
- *   Username: admin
- *   Password: sweetsge
+ * Uses one-way SHA-256 cryptographic hashing to verify admin access.
+ * Plaintext passwords are never stored in the client codebase.
  * 
  * Quiz / Exam responder pages (responder.html) remain public and accessible to candidates.
  */
@@ -11,10 +10,20 @@ const FormForgeAuth = {
   SESSION_KEY: 'formforge_admin_auth',
   AUTH_TIMESTAMP_KEY: 'formforge_admin_auth_time',
   
-  // Configured default credentials
-  CREDENTIALS: {
-    username: 'admin',
-    password: 'sweetsge'
+  // SHA-256 Cryptographic Hashes (one-way digest)
+  AUTH_HASHES: {
+    userHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+    passHash: 'd51775b1672a8bb3801f04c6da12890b1b3a9365c84900bb2c52ae192abc9d32'
+  },
+
+  // Helper to hash strings with browser native crypto.subtle
+  async sha256(str) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuf = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
   },
 
   // Check if admin is currently authenticated
@@ -63,8 +72,8 @@ const FormForgeAuth = {
       <div style="background: #ffffff; width: 100%; max-width: 420px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
         <!-- Modal Brand Header -->
         <div style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; padding: 2rem 1.75rem; text-align: center;">
-          <div style="width: 56px; height: 56px; background: rgba(255, 255, 255, 0.15); border-radius: 14px; margin: 0 auto 1rem auto; display: flex; align-items: center; justify-content: center; font-size: 28px; border: 1px solid rgba(255, 255, 255, 0.3);">
-            🔐
+          <div style="width: 56px; height: 56px; background: rgba(255, 255, 255, 0.15); border-radius: 14px; margin: 0 auto 1rem auto; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.3);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </div>
           <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">FormForge Admin</h2>
           <p style="margin: 0.35rem 0 0 0; font-size: 0.88rem; color: rgba(255, 255, 255, 0.8);">
@@ -127,40 +136,58 @@ const FormForgeAuth = {
     }, 100);
   },
 
-  handleLogin(e) {
+  async handleLogin(e) {
     e.preventDefault();
     const user = document.getElementById('ff_username').value.trim();
     const pass = document.getElementById('ff_password').value;
     const remember = document.getElementById('ff_remember_me').checked;
     const errBox = document.getElementById('ff_login_error');
+    const submitBtn = document.getElementById('btn_auth_submit');
 
-    if (user === this.CREDENTIALS.username && pass === this.CREDENTIALS.password) {
-      if (remember) {
-        localStorage.setItem(this.SESSION_KEY, 'true');
-        localStorage.setItem(this.AUTH_TIMESTAMP_KEY, Date.now().toString());
-      } else {
-        sessionStorage.setItem(this.SESSION_KEY, 'true');
-      }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying...';
+    }
 
-      const modal = document.getElementById('ff_admin_auth_modal');
-      if (modal) modal.remove();
+    try {
+      const inputUserHash = await this.sha256(user);
+      const inputPassHash = await this.sha256(pass);
 
-      if (window.Utils) {
-        Utils.showToast('Welcome, Administrator!', 'success');
-      }
+      if (inputUserHash === this.AUTH_HASHES.userHash && inputPassHash === this.AUTH_HASHES.passHash) {
+        if (remember) {
+          localStorage.setItem(this.SESSION_KEY, 'true');
+          localStorage.setItem(this.AUTH_TIMESTAMP_KEY, Date.now().toString());
+        } else {
+          sessionStorage.setItem(this.SESSION_KEY, 'true');
+        }
 
-      // If page was waiting to render, reload or trigger init
-      window.location.reload();
-    } else {
-      if (errBox) {
-        errBox.textContent = 'Invalid credentials. Please enter the correct username and password.';
-        errBox.style.display = 'block';
+        const modal = document.getElementById('ff_admin_auth_modal');
+        if (modal) modal.remove();
+
+        if (window.Utils) {
+          Utils.showToast('Welcome, Administrator!', 'success');
+        }
+
+        window.location.reload();
+        return;
       }
-      const passInp = document.getElementById('ff_password');
-      if (passInp) {
-        passInp.value = '';
-        passInp.focus();
-      }
+    } catch (err) {
+      console.error('Auth verification error', err);
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In to Console →';
+    }
+
+    if (errBox) {
+      errBox.textContent = 'Invalid credentials. Please enter the correct username and password.';
+      errBox.style.display = 'block';
+    }
+    const passInp = document.getElementById('ff_password');
+    if (passInp) {
+      passInp.value = '';
+      passInp.focus();
     }
   },
 
