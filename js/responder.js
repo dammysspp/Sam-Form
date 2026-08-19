@@ -914,6 +914,27 @@ class FormResponder {
             </div>
           ` : ''}
 
+          <!-- Automated Delivery Channel Box -->
+          <div class="results-delivery-promo" style="background:#f8fafc; border:1.5px solid var(--border-color); border-radius:var(--radius-md); padding:1.25rem; margin:1.5rem 0; text-align:left;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+              <span style="color:#229ED9;">${icon('telegram', 20)}</span>
+              <strong style="color:var(--text-main); font-size:1rem;">Get Graded Report & Certificate on Telegram or WhatsApp</strong>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.85rem; line-height:1.4;">
+              Want your final score card, detailed breakdown, and examiner feedback delivered straight to your Telegram? Click below to connect with our official bot.
+            </p>
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+              <a href="https://t.me/samscoclawd_bot?start=result_${responseRecord.id}" target="_blank" class="btn btn-sm" style="background:#229ED9; color:#ffffff; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+                <span style="vertical-align:-2px;">${icon('telegram', 15)}</span> Connect on Telegram (@samscoclawd_bot)
+              </a>
+              ${this.respondentPhone && this.respondentPhone !== 'N/A' ? `
+                <span class="badge" style="background:#dcfce7; color:#166534; padding:0.45rem 0.75rem; font-size:0.8rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <span style="vertical-align:-1px;">${icon('whatsapp', 13)}</span> WhatsApp Alerts Enabled (${Utils.escapeHTML(this.respondentPhone)})
+                </span>
+              ` : ''}
+            </div>
+          </div>
+
           <div class="results-actions">
             <button type="button" class="btn btn-secondary" onclick="window.print()">
               <span style="vertical-align:-2px;">${icon('printer', 15)}</span> Print / Save PDF
