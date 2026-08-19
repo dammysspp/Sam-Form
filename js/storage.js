@@ -231,12 +231,10 @@ class FormForgeStorage {
   async getResponsesByFormId(formId) {
     await this.isReady;
 
-    // Fetch live from Supabase
+    // Fetch live from Supabase if connected
     if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
       const cloudResp = await FormForgeSupabase.fetchResponsesForFormFromCloud(formId);
-      if (cloudResp && cloudResp.length > 0) {
-        return cloudResp;
-      }
+      return cloudResp || [];
     }
 
     return new Promise((resolve, reject) => {
@@ -272,6 +270,12 @@ class FormForgeStorage {
 
   async deleteResponse(responseId) {
     await this.isReady;
+
+    // Delete from Supabase Cloud if connected
+    if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
+      await FormForgeSupabase.deleteResponseFromCloud(responseId);
+    }
+
     return new Promise((resolve, reject) => {
       if (!this.db) { resolve(true); return; }
       const tx = this.db.transaction('responses', 'readwrite');
