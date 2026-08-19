@@ -659,6 +659,11 @@ class FormResults {
     await this.reloadResponses();
     this.render();
 
+    // If fully graded and auto-dispatch is enabled, send via configured bots
+    if (resp.scoring?.isFullyGraded && window.BotDispatcherInstance) {
+      BotDispatcherInstance.autoDispatchAll(this.form, resp);
+    }
+
     // Refresh modal summary KPI numbers
     const modal = document.getElementById(`inspect_modal_${resp.id}`);
     if (modal) {
@@ -666,7 +671,7 @@ class FormResults {
       this.inspectResponse(resp.id);
     }
 
-    Utils.showToast('Manual mark and feedback saved!', 'success');
+    Utils.showToast('Manual mark saved! Result updated.', 'success');
   }
 
   async deleteResponse(responseId) {

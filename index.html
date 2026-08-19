@@ -31,6 +31,9 @@
       </a>
 
       <div class="nav-actions">
+        <button class="btn btn-secondary" onclick="BotDispatcherInstance.openConfigModal()" title="Automated WhatsApp & Telegram Bot Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Bot Dispatch
+        </button>
         <button class="btn btn-secondary" id="btn-cloud-settings" onclick="App.openCloudConfigModal()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Connect Supabase
         </button>
@@ -151,6 +154,7 @@
   <script src="js/importer.js"></script>
   <script src="js/exporter.js"></script>
   <script src="js/scoring.js"></script>
+  <script src="js/bot_dispatcher.js"></script>
   <script src="js/builder.js"></script>
   <script src="js/devmode.js"></script>
   <script src="js/app.js"></script>
