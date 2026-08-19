@@ -67,9 +67,9 @@ const FormForgeAuth = {
           <div style="width: 56px; height: 56px; background: rgba(255, 255, 255, 0.15); border-radius: 14px; margin: 0 auto 1rem auto; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.3);">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </div>
-          <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">FormForge Admin</h2>
-          <p style="margin: 0.35rem 0 0 0; font-size: 0.88rem; color: rgba(255, 255, 255, 0.8);">
-            Sign in to access dashboard, builder & results
+          <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">SamForm Admin</h2>
+          <p style="margin: 0.35rem 0 0 0; font-size: 0.88rem; color: rgba(255, 255, 255, 0.85);">
+            Created by <strong>Samsco Communications</strong>
           </p>
         </div>
 
