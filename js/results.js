@@ -42,6 +42,17 @@ class FormResults {
     this.render();
   }
 
+  async reloadResponses() {
+    this.responses = await DB.getResponsesByFormId(this.form.id);
+    
+    // Ensure scores are fresh with manual grades evaluated
+    this.responses.forEach(r => {
+      r.scoring = ScoringEngine.calculateTotalResults(this.form, r.answers || {}, r.manualGrades || {});
+    });
+
+    this.filterAndSort();
+  }
+
   async renderNoForm() {
     const root = document.getElementById('results-app');
     if (!root) return;
