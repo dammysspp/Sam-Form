@@ -22,9 +22,11 @@ class BotDispatcher {
       telegramBotToken: '', // e.g. 7842918234:AAHkL...
       enableAutoTelegram: false,
 
-      // Email Gateway (Resend / Custom Webhook)
-      emailWebhookUrl: '',
-      enableAutoEmail: false,
+      // EmailJS Automation (100% Free 200 emails/month tier)
+      emailjsServiceId: '', // e.g. service_xxxxxx
+      emailjsTemplateId: '', // e.g. template_xxxxxx
+      emailjsPublicKey: '', // e.g. user_xxxxxxxx or public key
+      enableAutoEmailJS: false,
 
       // Auto-dispatch rule: triggers automatically upon final manual grade saving
       autoDispatchOnReviewComplete: true
@@ -40,7 +42,7 @@ class BotDispatcher {
 
   saveConfig(cfg) {
     localStorage.setItem(this.CONFIG_KEY, JSON.stringify(cfg));
-    if (window.Utils) Utils.showToast('Bot automation settings saved!', 'success');
+    if (window.Utils) Utils.showToast('Bot & Email automation settings saved!', 'success');
   }
 
   // --- 1. WHATSAPP GATEWAY DISPATCH (Option B) ---
@@ -119,6 +121,58 @@ class BotDispatcher {
     }
   }
 
+  // --- 3. EMAILJS AUTOMATION DISPATCH (100% Free Direct REST API) ---
+  async sendEmailJS(toEmail, candidateName, formTitle, scoreResult, durationSeconds) {
+    const cfg = this.getConfig();
+    if (!cfg.emailjsServiceId || !cfg.emailjsTemplateId || !cfg.emailjsPublicKey) {
+      return { success: false, fallback: true, reason: 'EmailJS credentials incomplete' };
+    }
+
+    if (!toEmail || !toEmail.includes('@')) {
+      return { success: false, reason: 'Invalid recipient email' };
+    }
+
+    const s = scoreResult || {};
+    const statusText = s.isFullyGraded ? (s.passed ? 'PASSED ✓' : 'FAILED') : 'PENDING REVIEW';
+
+    const templateParams = {
+      to_email: toEmail,
+      recipient_email: toEmail,
+      candidate_name: candidateName,
+      assessment_title: formTitle,
+      score: `${s.score || 0} / ${s.maxScore || 0}`,
+      percentage: `${s.percentage || 0}%`,
+      grade: s.grade || 'N/A',
+      status: statusText,
+      duration: Utils.formatTime(durationSeconds || 0),
+      remarks: s.remark || 'N/A',
+      message: `Your score for ${formTitle} is ${s.score || 0}/${s.maxScore || 0} (${s.percentage || 0}%). Grade: ${s.grade || 'N/A'}. Status: ${statusText}.`
+    };
+
+    try {
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: cfg.emailjsServiceId,
+          template_id: cfg.emailjsTemplateId,
+          user_id: cfg.emailjsPublicKey,
+          template_params: templateParams
+        })
+      });
+
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const errText = await response.text();
+        return { success: false, reason: errText || response.statusText };
+      }
+    } catch (err) {
+      console.error('[BotDispatcher] EmailJS error:', err);
+      return { success: false, reason: err.message };
+    }
+  }
+
   // --- AUTOMATED FULL DISPATCH FOR A COMPLETED SUBMISSION ---
   async autoDispatchAll(form, responseRecord) {
     const cfg = this.getConfig();
@@ -153,7 +207,8 @@ class BotDispatcher {
 
     const results = {
       whatsapp: null,
-      telegram: null
+      telegram: null,
+      emailjs: null
     };
 
     // 1. Send automated WhatsApp if enabled & phone exists
@@ -164,6 +219,11 @@ class BotDispatcher {
     // 2. Send automated Telegram if enabled & telegram user exists
     if (cfg.enableAutoTelegram && cfg.telegramBotToken && responseRecord.respondentTelegram && responseRecord.respondentTelegram !== 'N/A') {
       results.telegram = await this.sendTelegramMessage(responseRecord.respondentTelegram, htmlText);
+    }
+
+    // 3. Send automated Email via EmailJS if enabled & email exists
+    if (cfg.enableAutoEmailJS && cfg.emailjsServiceId && responseRecord.respondentEmail && responseRecord.respondentEmail.includes('@')) {
+      results.emailjs = await this.sendEmailJS(responseRecord.respondentEmail, candidateName, formTitle, s, responseRecord.durationSeconds);
     }
 
     return results;
@@ -244,6 +304,38 @@ class BotDispatcher {
             </div>
           </div>
 
+          <!-- EmailJS Automation Section (100% Free Tier) -->
+          <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <span style="color:#f59e0b;">${icon('mail', 22)}</span>
+                <strong style="font-size:1rem; color:#0f172a;">Email.js Automation (100% Free)</strong>
+              </div>
+              <label class="toggle-label" style="margin:0;">
+                <input type="checkbox" id="cfg_enable_emailjs" ${cfg.enableAutoEmailJS ? 'checked' : ''} />
+                <span>Auto-Send</span>
+              </label>
+            </div>
+            <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem; line-height:1.4;">
+              Connect your free <strong>EmailJS</strong> account (200 free emails/month). Dispatches personalized results directly into candidate inboxes in the background.
+            </p>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+              <div>
+                <label class="form-label-sm">Service ID</label>
+                <input type="text" id="cfg_emailjs_service" class="form-input" placeholder="e.g. service_xxxx" value="${Utils.escapeHTML(cfg.emailjsServiceId || '')}" />
+              </div>
+              <div>
+                <label class="form-label-sm">Template ID</label>
+                <input type="text" id="cfg_emailjs_template" class="form-input" placeholder="e.g. template_xxxx" value="${Utils.escapeHTML(cfg.emailjsTemplateId || '')}" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label-sm">Public Key (User ID)</label>
+              <input type="text" id="cfg_emailjs_key" class="form-input" placeholder="e.g. user_xxxx or public key" value="${Utils.escapeHTML(cfg.emailjsPublicKey || '')}" />
+            </div>
+          </div>
+
           <!-- Auto Dispatch Behavior -->
           <div style="background:#f1f5f9; border-radius:8px; padding:1rem;">
             <label class="toggle-label" style="display:flex; align-items:center; gap:0.5rem;">
@@ -272,6 +364,11 @@ class BotDispatcher {
     const tgToken = document.getElementById('cfg_tg_token').value.trim();
     const enableTg = document.getElementById('cfg_enable_tg').checked;
 
+    const emailService = document.getElementById('cfg_emailjs_service').value.trim();
+    const emailTemplate = document.getElementById('cfg_emailjs_template').value.trim();
+    const emailKey = document.getElementById('cfg_emailjs_key').value.trim();
+    const enableEmailJS = document.getElementById('cfg_enable_emailjs').checked;
+
     const autoOnReview = document.getElementById('cfg_auto_on_review').checked;
 
     this.saveConfig({
@@ -280,6 +377,10 @@ class BotDispatcher {
       enableAutoWhatsApp: enableWa,
       telegramBotToken: tgToken,
       enableAutoTelegram: enableTg,
+      emailjsServiceId: emailService,
+      emailjsTemplateId: emailTemplate,
+      emailjsPublicKey: emailKey,
+      enableAutoEmailJS: enableEmailJS,
       autoDispatchOnReviewComplete: autoOnReview
     });
 

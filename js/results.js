@@ -775,22 +775,47 @@ class FormResults {
     window.open(url, '_blank');
   }
 
-  dispatchEmail(responseId) {
+  async dispatchEmail(responseId) {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
     const email = resp.respondentEmail && resp.respondentEmail !== 'N/A' ? resp.respondentEmail : '';
+    if (!email || !email.includes('@')) {
+      Utils.showToast('Candidate provided no valid email address.', 'warning');
+      return;
+    }
+
+    // Check if automated EmailJS is configured
+    if (window.BotDispatcherInstance) {
+      const cfg = BotDispatcherInstance.getConfig();
+      if (cfg.emailjsServiceId && cfg.emailjsTemplateId && cfg.emailjsPublicKey) {
+        Utils.showToast('Sending automated email via EmailJS...', 'info');
+        const res = await BotDispatcherInstance.sendEmailJS(email, resp.respondentName || 'Candidate', this.form.title, resp.scoring, resp.durationSeconds);
+        if (res.success) {
+          Utils.showToast(`✓ Graded result emailed to ${email} via EmailJS!`, 'success');
+          return;
+        } else {
+          console.warn('[Results] EmailJS dispatch error, falling back to mail client:', res.reason);
+        }
+      }
+    }
+
+    // Fallback: Launch mail client
     const subject = encodeURIComponent(`Your Results: ${this.form.title} [Grade: ${resp.scoring?.grade || 'N/A'}]`);
     const body = encodeURIComponent(this.generateScoreReportText(resp));
-
     const mailtoUrl = `mailto:${email}?subject=${subject}&body=${body}`;
     window.location.href = mailtoUrl;
     Utils.showToast('Launching email composer with pre-filled score...', 'success');
   }
 
-  dispatchAllChannels(responseId) {
+  async dispatchAllChannels(responseId) {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
+
+    // Trigger full automated bot dispatch
+    if (window.BotDispatcherInstance) {
+      BotDispatcherInstance.autoDispatchAll(this.form, resp);
+    }
 
     let dispatched = 0;
     if (resp.respondentPhone && resp.respondentPhone !== 'N/A') {
