@@ -304,12 +304,12 @@ class BotDispatcher {
             </div>
           </div>
 
-          <!-- Telegram Bot Section -->
+          <!-- Telegram Bot & Personal Userbot Section -->
           <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
               <div style="display:flex; align-items:center; gap:0.5rem;">
                 <span style="color:#229ED9;">${icon('telegram', 22)}</span>
-                <strong style="font-size:1rem; color:#0f172a;">Telegram Bot API (100% Free)</strong>
+                <strong style="font-size:1rem; color:#0f172a;">Telegram Integration (100% Free)</strong>
               </div>
               <label class="toggle-label" style="margin:0;">
                 <input type="checkbox" id="cfg_enable_tg" ${cfg.enableAutoTelegram ? 'checked' : ''} />
@@ -317,12 +317,23 @@ class BotDispatcher {
               </label>
             </div>
             <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem; line-height:1.4;">
-              Paste your free Telegram Bot Token from <code>@BotFather</code> to enable direct background dispatching.
+              Enter your <strong>Bot Token</strong> from <code>@BotFather</code> (for bot messaging) OR your <strong>API ID & API Hash</strong> from <a href="https://my.telegram.org" target="_blank" style="color:var(--primary); font-weight:600;">my.telegram.org</a> (to send from your personal account to any phone number).
             </p>
 
-            <div>
-              <label class="form-label-sm">Telegram Bot Token</label>
+            <div style="margin-bottom:0.75rem;">
+              <label class="form-label-sm">Option 1: Telegram Bot Token (@BotFather)</label>
               <input type="text" id="cfg_tg_token" class="form-input" placeholder="e.g. 7842918234:AAHkL_AbCdEf..." value="${Utils.escapeHTML(cfg.telegramBotToken || '')}" />
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+              <div>
+                <label class="form-label-sm">Option 2: Telegram API ID (my.telegram.org)</label>
+                <input type="text" id="cfg_tg_api_id" class="form-input" placeholder="e.g. 28491023" value="${Utils.escapeHTML(cfg.telegramApiId || '')}" />
+              </div>
+              <div>
+                <label class="form-label-sm">Telegram API Hash (my.telegram.org)</label>
+                <input type="password" id="cfg_tg_api_hash" class="form-input" placeholder="e.g. a1b2c3d4e5f6..." value="${Utils.escapeHTML(cfg.telegramApiHash || '')}" />
+              </div>
             </div>
           </div>
 
@@ -384,6 +395,8 @@ class BotDispatcher {
     const enableWa = document.getElementById('cfg_enable_wa').checked;
 
     const tgToken = document.getElementById('cfg_tg_token').value.trim();
+    const tgApiId = document.getElementById('cfg_tg_api_id').value.trim();
+    const tgApiHash = document.getElementById('cfg_tg_api_hash').value.trim();
     const enableTg = document.getElementById('cfg_enable_tg').checked;
 
     const emailService = document.getElementById('cfg_emailjs_service').value.trim();
@@ -398,6 +411,8 @@ class BotDispatcher {
       whatsappApiKey: waKey,
       enableAutoWhatsApp: enableWa,
       telegramBotToken: tgToken,
+      telegramApiId: tgApiId,
+      telegramApiHash: tgApiHash,
       enableAutoTelegram: enableTg,
       emailjsServiceId: emailService,
       emailjsTemplateId: emailTemplate,
