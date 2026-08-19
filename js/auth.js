@@ -1,11 +1,3 @@
-//**
- * FormForge Admin Authentication Gate
- * Uses one-way SHA-256 cryptographic hashing to verify admin access.
- * Plaintext passwords are never stored in the client codebase.
- * 
- * Quiz / Exam responder pages (responder.html) remain public and accessible to candidates.
- */
-
 const FormForgeAuth = {
   SESSION_KEY: 'formforge_admin_auth',
   AUTH_TIMESTAMP_KEY: 'formforge_admin_auth_time',
