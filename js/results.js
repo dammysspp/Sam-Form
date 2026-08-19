@@ -795,9 +795,26 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
-    resp[field] = val.trim() || 'N/A';
+    const trimmed = val.trim();
+    resp[field] = trimmed || 'N/A';
+    
+    // Also save inside answers._metadata so it persists across DB and Supabase
+    if (!resp.answers) resp.answers = {};
+    if (!resp.answers._metadata) resp.answers._metadata = {};
+    if (field === 'respondentPhone') resp.answers._metadata.phone = trimmed || 'N/A';
+    if (field === 'respondentTelegram') resp.answers._metadata.telegram = trimmed || 'N/A';
+
     await DB.saveResponse(resp);
     await this.reloadResponses();
+
+    // Update input element value if present
+    const phoneInput = document.getElementById(`disp_phone_${responseId}`);
+    const tgInput = document.getElementById(`disp_tg_${responseId}`);
+    const emailInput = document.getElementById(`disp_email_${responseId}`);
+    if (phoneInput && field === 'respondentPhone') phoneInput.value = trimmed;
+    if (tgInput && field === 'respondentTelegram') tgInput.value = trimmed;
+    if (emailInput && field === 'respondentEmail') emailInput.value = trimmed;
+
     Utils.showToast(`Updated candidate ${field.replace('respondent', '')}!`, 'success');
   }
 
