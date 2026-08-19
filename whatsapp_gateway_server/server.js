@@ -93,7 +93,9 @@ async function startWhatsAppBot() {
   });
 }
 
-// 🌐 1. PAIRING & LINKING WEB UI
+// 🌐 1. PAIRING & LINKING WEB UI (Accessible on both / and /pair)
+app.get('/', (req, res) => res.redirect('/pair'));
+
 app.get('/pair', (req, res) => {
   res.send(`
     <!DOCTYPE html>
