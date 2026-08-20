@@ -746,7 +746,9 @@ class FormResponder {
 
             if (match) {
               const fromUser = match.message?.from;
-              const username = fromUser?.username ? `@${fromUser.username}` : (fromUser?.first_name || 'Verified');
+              const chatId = match.message?.chat?.id;
+              const firstName = fromUser?.first_name || 'Candidate';
+              const username = fromUser?.username ? `@${fromUser.username}` : firstName;
               
               const banner = document.getElementById('tg-handshake-banner');
               const tgInput = document.getElementById('post_resp_telegram');
@@ -765,6 +767,25 @@ class FormResponder {
               if (tgInput && fromUser?.username && !tgInput.value) {
                 tgInput.value = `@${fromUser.username}`;
                 tgInput.style.borderColor = '#10b981';
+              }
+
+              // Send instant greeting message directly to the candidate chat
+              if (chatId) {
+                try {
+                  fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      chat_id: chatId,
+                      text: `🎓 <b>SamForm Assessment Bot</b>\n\n` +
+                            `Hello <b>${firstName}</b>! 👋\n\n` +
+                            `✅ <b>Telegram Linked Successfully!</b>\n\n` +
+                            `As soon as the examiner finishes reviewing and finalizes your assessment, your <b>full score report, grade, and feedback</b> will be delivered straight to this chat automatically!\n\n` +
+                            `<i>You may now return to SamForm and tap Save Delivery Channels & Finish.</i>`,
+                      parse_mode: 'HTML'
+                    })
+                  }).catch(() => {});
+                } catch (err) {}
               }
 
               clearInterval(this._tgWatcherInterval);
