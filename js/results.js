@@ -574,40 +574,75 @@ class FormResults {
                       ${qManual.gradedAt ? `<span class="text-success font-weight-bold" style="font-size:0.75rem;">✓ Graded on ${Utils.formatDate(qManual.gradedAt)}</span>` : '<span class="text-muted" style="font-size:0.75rem;">Awaiting review</span>'}
                     </div>
 
-                    <div class="manual-quick-btn-row">
-                      <button type="button" class="btn btn-sm btn-success" 
-                        onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Correct')">
-                        ✓ Correct (+${maxPts} pts)
-                      </button>
-                      ${maxPts > 1 ? `
-                        <button type="button" class="btn btn-sm btn-secondary" 
-                          onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Partial Credit')">
-                          ½ Partial (+${maxPts / 2} pts)
+                    ${qManual.gradedAt ? `
+                      <!-- Graded State: Compact Status Badge with Remark/Edit Icon -->
+                      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface); padding:0.6rem 0.85rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.4rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                          <span class="badge ${qManual.earnedPoints > 0 ? 'badge-correct' : 'badge-incorrect'}" style="font-size:0.8rem; padding:0.3rem 0.6rem;">
+                            ${qManual.earnedPoints > 0 ? `✓ Awarded +${qManual.earnedPoints} pts` : '✕ 0 pts (Incorrect)'}
+                          </span>
+                          ${qManual.comment ? `<span style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">"${Utils.escapeHTML(qManual.comment)}"</span>` : ''}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-ghost" onclick="Results.toggleRemarkMode('${resp.id}', '${q.id}')" title="Remark / Edit Mark">
+                          <span style="vertical-align:-2px;">${icon('edit', 14)}</span> Remark
                         </button>
-                      ` : ''}
-                      <button type="button" class="btn btn-sm btn-danger" 
-                        onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Incorrect')">
-                        ✕ Incorrect (0 pts)
-                      </button>
-                    </div>
+                      </div>
 
-                    <div class="manual-grading-controls">
-                      <div class="points-input-wrap">
-                        <label class="form-label-sm">Custom Mark (0 to ${maxPts}):</label>
-                        <input type="number" min="0" max="${maxPts}" step="0.5" 
-                          id="manual_pts_${q.id}" 
-                          class="form-input form-input-sm" 
-                          value="${qManual.earnedPoints !== undefined ? qManual.earnedPoints : (evalData.earnedPoints || 0)}" style="width:110px;" />
+                      <!-- Hidden Remark Editor -->
+                      <div id="remark_box_${q.id}" style="display:none; margin-top:0.6rem; padding-top:0.6rem; border-top:1px dashed var(--border-color);">
+                        <div class="manual-quick-btn-row" style="margin-bottom:0.5rem;">
+                          <button type="button" class="btn btn-sm btn-success" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Correct')">
+                            ✓ Correct (+${maxPts} pts)
+                          </button>
+                          ${maxPts > 1 ? `
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Partial Credit')">
+                              ½ Partial (+${maxPts / 2} pts)
+                            </button>
+                          ` : ''}
+                          <button type="button" class="btn btn-sm btn-danger" onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Incorrect')">
+                            ✕ Incorrect (0 pts)
+                          </button>
+                        </div>
+                        <div class="manual-grading-controls">
+                          <div class="points-input-wrap">
+                            <label class="form-label-sm">Custom Mark (0 to ${maxPts}):</label>
+                            <input type="number" min="0" max="${maxPts}" step="0.5" id="manual_pts_${q.id}" class="form-input form-input-sm" value="${qManual.earnedPoints || 0}" style="width:110px;" />
+                          </div>
+                          <div class="comments-input-wrap">
+                            <label class="form-label-sm">Feedback / Notes to Candidate:</label>
+                            <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" placeholder="Optional feedback..." value="${Utils.escapeHTML(qManual.comment || '')}" />
+                          </div>
+                          <button type="button" class="btn btn-sm btn-primary" onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save</button>
+                        </div>
                       </div>
-                      <div class="comments-input-wrap">
-                        <label class="form-label-sm">Feedback / Notes to Candidate:</label>
-                        <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" 
-                          placeholder="Optional feedback..." 
-                          value="${Utils.escapeHTML(qManual.comment || '')}" />
+                    ` : `
+                      <!-- Ungraded State: Quick Mark Buttons -->
+                      <div class="manual-quick-btn-row">
+                        <button type="button" class="btn btn-sm btn-success" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Correct')">
+                          ✓ Correct (+${maxPts} pts)
+                        </button>
+                        ${maxPts > 1 ? `
+                          <button type="button" class="btn btn-sm btn-secondary" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Partial Credit')">
+                            ½ Partial (+${maxPts / 2} pts)
+                          </button>
+                        ` : ''}
+                        <button type="button" class="btn btn-sm btn-danger" onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Incorrect')">
+                          ✕ Incorrect (0 pts)
+                        </button>
                       </div>
-                      <button type="button" class="btn btn-sm btn-primary"
-                        onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save</button>
-                    </div>
+
+                      <div class="manual-grading-controls">
+                        <div class="points-input-wrap">
+                          <label class="form-label-sm">Custom Mark (0 to ${maxPts}):</label>
+                          <input type="number" min="0" max="${maxPts}" step="0.5" id="manual_pts_${q.id}" class="form-input form-input-sm" value="${evalData.earnedPoints || 0}" style="width:110px;" />
+                        </div>
+                        <div class="comments-input-wrap">
+                          <label class="form-label-sm">Feedback / Notes to Candidate:</label>
+                          <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" placeholder="Optional feedback..." value="${Utils.escapeHTML(qManual.comment || '')}" />
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save</button>
+                      </div>
+                    `}
                   </div>
                 </div>
               `;
@@ -640,7 +675,14 @@ class FormResults {
     document.querySelectorAll('.modal-backdrop').forEach(m => m.remove());
   }
 
-  async quickMark(responseId, qid, earnedPoints, defaultComment) {
+  toggleRemarkMode(responseId, qid) {
+    const box = document.getElementById(`remark_box_${qid}`);
+    if (box) {
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+  }
+
+  async quickMark(responseId, qid, earnedPoints, defaultComment = '') {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 

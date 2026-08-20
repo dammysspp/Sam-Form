@@ -27,22 +27,22 @@ class BotDispatcher {
   getConfig() {
     const defaultCfg = {
       // WhatsApp Gateway (Option B - Self-hosted Baileys / WPPConnect server)
-      whatsappGatewayUrl: '', // e.g. https://my-wa-gateway.onrender.com
-      whatsappApiKey: '', // Optional secret auth key
-      enableAutoWhatsApp: false,
+      whatsappGatewayUrl: 'https://sam-form.onrender.com',
+      whatsappApiKey: '',
+      enableAutoWhatsApp: true,
 
       // Telegram Bot API (100% Free official token)
-      telegramBotToken: '', // e.g. 7842918234:AAHkL...
-      enableAutoTelegram: false,
+      telegramBotToken: '8621386918:AAGxfUc5JVFlyivo_iBmJeC7ZLoxWD-m9V0',
+      enableAutoTelegram: true,
 
       // Telegram User Account Gateway (Personal MTProto userbot)
-      enableAutoTelegramUser: false,
+      enableAutoTelegramUser: true,
 
       // EmailJS Automation (100% Free 200 emails/month tier)
-      emailjsServiceId: '', // e.g. service_xxxxxx
-      emailjsTemplateId: '', // e.g. template_xxxxxx
-      emailjsPublicKey: '', // e.g. user_xxxxxxxx or public key
-      enableAutoEmailJS: false,
+      emailjsServiceId: 'service_7m7vg7a',
+      emailjsTemplateId: 'template_c6qiyv9',
+      emailjsPublicKey: 'CKq_iBV0azIcGlt_Q',
+      enableAutoEmailJS: true,
 
       // Auto-dispatch rule: triggers automatically upon final manual grade saving
       autoDispatchOnReviewComplete: true
@@ -337,19 +337,49 @@ class BotDispatcher {
     // 1. Send automated WhatsApp if enabled & phone exists
     if (cfg.enableAutoWhatsApp && cfg.whatsappGatewayUrl && responseRecord.respondentPhone && responseRecord.respondentPhone !== 'N/A') {
       results.whatsapp = await this.sendWhatsAppMessage(responseRecord.respondentPhone, plainText);
+      if (results.whatsapp && !results.whatsapp.success) {
+        this.sendAdminDeliveryAlert('WhatsApp', candidateName, responseRecord.respondentPhone, results.whatsapp.reason);
+      }
     }
 
     // 2. Send automated Telegram if enabled & telegram user exists
     if (cfg.enableAutoTelegram && cfg.telegramBotToken && responseRecord.respondentTelegram && responseRecord.respondentTelegram !== 'N/A') {
       results.telegram = await this.sendTelegramMessage(responseRecord.respondentTelegram, htmlText);
+      if (results.telegram && !results.telegram.success) {
+        this.sendAdminDeliveryAlert('Telegram', candidateName, responseRecord.respondentTelegram, results.telegram.reason);
+      }
     }
 
     // 3. Send automated Email via EmailJS if enabled & email exists
     if (cfg.enableAutoEmailJS && cfg.emailjsServiceId && responseRecord.respondentEmail && responseRecord.respondentEmail.includes('@')) {
       results.emailjs = await this.sendEmailJS(responseRecord.respondentEmail, candidateName, formTitle, s, responseRecord.durationSeconds);
+      if (results.emailjs && !results.emailjs.success) {
+        this.sendAdminDeliveryAlert('Email', candidateName, responseRecord.respondentEmail, results.emailjs.reason);
+      }
     }
 
     return results;
+  }
+
+  // Notify Admin directly on Telegram when a candidate delivery needs attention
+  async sendAdminDeliveryAlert(channel, candidateName, recipient, reason) {
+    const adminChatId = '8321199114'; // @justscp
+    const token = '8621386918:AAGxfUc5JVFlyivo_iBmJeC7ZLoxWD-m9V0';
+
+    try {
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: adminChatId,
+          text: `⚠️ <b>SamForm Automated Dispatch Notice</b>\n\n` +
+                `Could not auto-deliver score via <b>${channel}</b> to <b>${candidateName}</b> (<code>${recipient}</code>).\n\n` +
+                `<b>Reason:</b> <i>${reason || 'Unknown error'}</i>\n\n` +
+                `👉 Review & manually send from results dashboard: https://samform.vercel.app/results.html`,
+          parse_mode: 'HTML'
+        })
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   // --- BOT CONFIGURATION MODAL ---
