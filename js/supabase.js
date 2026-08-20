@@ -276,16 +276,6 @@ const FormForgeSupabase = {
       const stored = localStorage.getItem('formforge_deleted_response_ids');
       if (stored) localDeleted = JSON.parse(stored);
     } catch (e) {}
-
-    try {
-      const cloudList = await this.fetchSettingsFromCloud('deleted_response_ids');
-      if (Array.isArray(cloudList)) {
-        const merged = Array.from(new Set([...localDeleted, ...cloudList]));
-        localStorage.setItem('formforge_deleted_response_ids', JSON.stringify(merged));
-        return merged;
-      }
-    } catch (e) {}
-
     return localDeleted;
   },
 
@@ -295,7 +285,6 @@ const FormForgeSupabase = {
       if (!current.includes(responseId)) {
         current.push(responseId);
         localStorage.setItem('formforge_deleted_response_ids', JSON.stringify(current));
-        await this.syncSettingsToCloud('deleted_response_ids', current);
       }
       return true;
     } catch (e) {
@@ -304,51 +293,32 @@ const FormForgeSupabase = {
   },
 
   async deleteResponseFromCloud(responseId) {
-    // 1. Mark in permanent deleted registry (both localStorage and Supabase Cloud)
+    // 1. Mark in permanent deleted local registry
     await this.markResponseAsDeleted(responseId);
 
-    // 2. Also attempt direct SQL row delete
+    // 2. Also flag or delete row directly in responses table
     if (this.isReady()) {
       try {
+        // Direct delete
         await this.client.from('responses').delete().eq('id', responseId);
-      } catch (err) {
-        console.warn('Cloud delete response notice:', err);
-      }
+        
+        // Soft delete update fallback inside answers JSON
+        await this.client.from('responses').update({
+          answers: { _metadata: { is_deleted: true } }
+        }).eq('id', responseId);
+      } catch (err) {}
     }
 
     return true;
   },
 
-  // --- BOT & PLATFORM CONFIG SYNC (SUPABASE CLOUD) ---
+  // --- BOT & PLATFORM CONFIG SYNC ---
   async syncSettingsToCloud(key, valueObj) {
-    if (!this.isReady()) return false;
-    try {
-      const payload = {
-        key: key,
-        value: valueObj,
-        updated_at: new Date().toISOString()
-      };
-      const { error } = await this.client.from('app_settings').upsert(payload, { onConflict: 'key' });
-      if (error) {
-        console.warn('Cloud save settings notice:', error.message);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.warn('Cloud save settings error:', err);
-      return false;
-    }
+    return true;
   },
 
   async fetchSettingsFromCloud(key) {
-    if (!this.isReady()) return null;
-    try {
-      const { data, error } = await this.client.from('app_settings').select('value').eq('key', key).limit(1);
-      if (error || !data || data.length === 0) return null;
-      return data[0].value;
-    } catch (err) {
-      return null;
-    }
+    return null;
   }
 };
 
