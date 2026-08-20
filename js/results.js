@@ -947,12 +947,16 @@ class FormResults {
       const cfg = BotDispatcherInstance.getConfig();
       if (cfg.whatsappGatewayUrl && phone) {
         Utils.showToast('Sending automated WhatsApp via Gateway...', 'info');
-        const res = await BotDispatcherInstance.sendWhatsAppMessage(phone, this.generateScoreReportText(resp));
-        if (res.success) {
-          Utils.showToast(`✓ Graded result sent to WhatsApp (+${phone})!`, 'success');
-          return;
-        } else if (!res.fallback) {
-          console.warn('[Results] WhatsApp gateway error, opening direct chat:', res.reason);
+        try {
+          const res = await BotDispatcherInstance.sendWhatsAppMessage(phone, this.generateScoreReportText(resp));
+          if (res.success) {
+            Utils.showToast(`✓ Graded result sent to WhatsApp (+${phone})!`, 'success');
+            return;
+          } else {
+            Utils.showToast(`WhatsApp Gateway Notice: ${res.reason || 'Could not send'}. Opening WhatsApp Web...`, 'warning', 3500);
+          }
+        } catch (e) {
+          Utils.showToast('WhatsApp Gateway unreachable. Opening WhatsApp direct...', 'warning');
         }
       }
     }
