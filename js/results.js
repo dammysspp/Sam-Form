@@ -43,6 +43,13 @@ class FormResults {
   }
 
   async reloadResponses() {
+    if (!this.form) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const formId = urlParams.get('id');
+      if (formId) this.form = await DB.getFormById(formId);
+    }
+    if (!this.form) return;
+
     this.responses = await DB.getResponsesByFormId(this.form.id);
     
     // Ensure scores are fresh with manual grades evaluated
