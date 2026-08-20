@@ -201,36 +201,16 @@ class FormResponder {
               </ul>
             </div>
 
-            <!-- Candidate Details Form -->
+            <!-- Candidate Details Form (Name Only at Beginning) -->
             <div class="intro-candidate-form">
-              <h3 class="intro-candidate-title"><span style="vertical-align:-2px;">${icon('user', 18)}</span> Candidate Information & Result Delivery</h3>
-              <div class="grid-2-col">
-                <div>
-                  <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
-                  <input type="text" id="intro_resp_name" class="form-input" 
-                    placeholder="e.g. John Doe" value="${Utils.escapeHTML(this.respondentName)}" />
-                </div>
-                <div>
-                  <label class="form-label-sm">Email Address</label>
-                  <input type="email" id="intro_resp_email" class="form-input" 
-                    placeholder="candidate@example.com" value="${Utils.escapeHTML(this.respondentEmail)}" />
-                </div>
+              <h3 class="intro-candidate-title"><span style="vertical-align:-2px;">${icon('user', 18)}</span> Candidate Information</h3>
+              <div style="margin-bottom: 0.75rem;">
+                <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
+                <input type="text" id="intro_resp_name" class="form-input" 
+                  placeholder="e.g. John Doe" value="${Utils.escapeHTML(this.respondentName)}" />
               </div>
 
-              <div class="grid-2-col" style="margin-top: 0.75rem;">
-                <div>
-                  <label class="form-label-sm">WhatsApp Phone Number (with Country Code)</label>
-                  <input type="tel" id="intro_resp_phone" class="form-input" 
-                    placeholder="e.g. +2348012345678" value="${Utils.escapeHTML(this.respondentPhone || '')}" />
-                </div>
-                <div>
-                  <label class="form-label-sm">Telegram Username (or Phone)</label>
-                  <input type="text" id="intro_resp_telegram" class="form-input" 
-                    placeholder="e.g. @john_doe or +234..." value="${Utils.escapeHTML(this.respondentTelegram || '')}" />
-                </div>
-              </div>
-
-              <div style="margin-top: 0.75rem;">
+              <div style="margin-bottom: 1.25rem;">
                 <label class="form-label-sm">Student / Candidate ID (Optional)</label>
                 <input type="text" id="intro_resp_id" class="form-input" 
                   placeholder="e.g. CAND-2026-99" value="${Utils.escapeHTML(this.respondentId || '')}" />
@@ -248,9 +228,6 @@ class FormResponder {
 
   handleBeginClick() {
     const nameInput = document.getElementById('intro_resp_name');
-    const emailInput = document.getElementById('intro_resp_email');
-    const phoneInput = document.getElementById('intro_resp_phone');
-    const telegramInput = document.getElementById('intro_resp_telegram');
     const idInput = document.getElementById('intro_resp_id');
 
     const name = nameInput ? nameInput.value.trim() : '';
@@ -261,10 +238,10 @@ class FormResponder {
     }
 
     this.respondentName = name;
-    this.respondentEmail = emailInput ? emailInput.value.trim() : '';
-    this.respondentPhone = phoneInput ? phoneInput.value.trim() : '';
-    this.respondentTelegram = telegramInput ? telegramInput.value.trim().replace(/^@/, '') : '';
     this.respondentId = idInput ? idInput.value.trim() : '';
+    this.respondentEmail = '';
+    this.respondentPhone = '';
+    this.respondentTelegram = '';
 
     this.startAssessment();
   }
@@ -820,10 +797,6 @@ class FormResponder {
 
     // If score is hidden and candidate didn't provide contact info, show contact capture card
     if (!revealScore && !isSurvey) {
-      const hasAnyContact = (this.respondentEmail && this.respondentEmail !== 'N/A') || 
-                            (this.respondentPhone && this.respondentPhone !== 'N/A') || 
-                            (this.respondentTelegram && this.respondentTelegram !== 'N/A');
-
       root.innerHTML = `
         <div class="results-screen-container">
           <div class="results-hero-card hero-passed">
@@ -835,55 +808,49 @@ class FormResponder {
               Your answers have been recorded. Scores are currently withheld by the examiner and will be reviewed and sent directly to you.
             </p>
 
-            ${!hasAnyContact ? `
-              <div class="email-capture-box" style="background: var(--bg-surface-subtle); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.5rem 0; text-align: left;">
-                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-                  <span style="color:var(--primary);">${icon('send', 20)}</span>
-                  <strong style="font-size:1.05rem; color:var(--text-main);">Where should we send your results?</strong>
-                </div>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.45;">
-                  Enter your contact details below. For instant automated delivery straight into your Telegram app, tap the blue button to connect with our official bot!
-                </p>
-
-                <!-- 1-Tap Telegram Bot Connect Action Banner -->
-                <div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:8px; padding:0.9rem; margin-bottom:1.15rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
-                  <div>
-                    <div style="font-weight:700; color:#0369a1; font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
-                      <span style="color:#0284c7;">${icon('telegram', 16)}</span> Required for Telegram Delivery:
-                    </div>
-                    <div style="font-size:0.78rem; color:#0c4a6e; margin-top:2px;">
-                      Tap button below to start <strong>@samscoclawd_bot</strong> so it can message you your score.
-                    </div>
-                  </div>
-                  <a href="https://t.me/samscoclawd_bot?start=result_${responseRecord.id}" target="_blank" class="btn btn-sm" style="background:#0284c7; color:#ffffff; font-weight:700; text-decoration:none; padding:0.5rem 0.85rem; display:inline-flex; align-items:center; gap:0.4rem; border-radius:6px; flex-shrink:0;">
-                    <span style="vertical-align:-2px;">${icon('play', 12)}</span> Step 1: Start @samscoclawd_bot
-                  </a>
-                </div>
-
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1rem;">
-                  <div>
-                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('whatsapp', 13)}</span> WhatsApp Phone</label>
-                    <input type="tel" id="post_resp_phone" class="form-input" placeholder="+234..." />
-                  </div>
-                  <div>
-                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('telegram', 13)}</span> Step 2: Your Telegram Username</label>
-                    <input type="text" id="post_resp_telegram" class="form-input" placeholder="@your_username" />
-                  </div>
-                  <div>
-                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('mail', 13)}</span> Email Address</label>
-                    <input type="email" id="post_resp_email" class="form-input" placeholder="student@example.com" />
-                  </div>
-                </div>
-                <button type="button" class="btn btn-primary" style="width:100%; font-weight:700; padding:0.75rem;" onclick="Responder.savePostSubmissionContacts('${responseRecord.id}')">
-                  Save Delivery Channels & Finish
-                </button>
-                <div id="post_contact_msg" style="margin-top:0.6rem; font-size:0.85rem;"></div>
+            <div class="email-capture-box" style="background: var(--bg-surface-subtle); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin: 1.5rem 0; text-align: left;">
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                <span style="color:var(--primary);">${icon('send', 20)}</span>
+                <strong style="font-size:1.05rem; color:var(--text-main);">Where should we send your results?</strong>
               </div>
-            ` : `
-              <div class="alert-box alert-success" style="margin: 1.5rem 0; text-align: left;">
-                <span style="vertical-align:-2px;">${icon('check', 16)}</span> Graded results and feedback will be sent directly to your saved contact channels once finalized.
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.45;">
+                Please enter your delivery details below so your graded report can be dispatched directly to you.
+              </p>
+
+              <!-- 1-Tap Telegram Bot Connect Action Banner -->
+              <div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:8px; padding:0.9rem; margin-bottom:1.15rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+                <div>
+                  <div style="font-weight:700; color:#0369a1; font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
+                    <span style="color:#0284c7;">${icon('telegram', 16)}</span> Required for Telegram Delivery:
+                  </div>
+                  <div style="font-size:0.78rem; color:#0c4a6e; margin-top:2px;">
+                    Tap button to start <strong>@samscoclawd_bot</strong> so it can message you your score.
+                  </div>
+                </div>
+                <a href="https://t.me/samscoclawd_bot?start=result_${responseRecord.id}" target="_blank" class="btn btn-sm" style="background:#0284c7; color:#ffffff; font-weight:700; text-decoration:none; padding:0.5rem 0.85rem; display:inline-flex; align-items:center; gap:0.4rem; border-radius:6px; flex-shrink:0;">
+                  <span style="vertical-align:-2px;">${icon('play', 12)}</span> Step 1: Start @samscoclawd_bot
+                </a>
               </div>
-            `}
+
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1rem;">
+                <div>
+                  <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('whatsapp', 13)}</span> WhatsApp Phone</label>
+                  <input type="tel" id="post_resp_phone" class="form-input" placeholder="+234..." />
+                </div>
+                <div>
+                  <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('telegram', 13)}</span> Step 2: Your Telegram Username</label>
+                  <input type="text" id="post_resp_telegram" class="form-input" placeholder="@your_username" />
+                </div>
+                <div>
+                  <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('mail', 13)}</span> Email Address</label>
+                  <input type="email" id="post_resp_email" class="form-input" placeholder="student@example.com" />
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary" style="width:100%; font-weight:700; padding:0.75rem;" onclick="Responder.savePostSubmissionContacts('${responseRecord.id}')">
+                Save Delivery Channels & Finish
+              </button>
+              <div id="post_contact_msg" style="margin-top:0.6rem; font-size:0.85rem;"></div>
+            </div>
 
             <div class="results-actions" style="margin-top: 1.5rem;">
               <a href="index.html" class="btn btn-secondary">
