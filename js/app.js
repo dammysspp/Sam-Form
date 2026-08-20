@@ -129,20 +129,20 @@ class DashboardApp {
           </div>
 
           <div class="form-card-meta">
-            <div class="meta-item"><span style="vertical-align:-2px;">${icon('helpCircle', 14)}</span> ${qCount} Questions</div>
-            <div class="meta-item"><span style="vertical-align:-2px;">${icon('clock', 14)}</span> ${timeLimitText}</div>
-            <div class="meta-item"><span style="vertical-align:-2px;">${icon('users', 14)}</span> <a href="results.html?id=${f.id}" class="meta-link">${respCount} Responses</a></div>
+            <div class="meta-item"><span style="vertical-align:-2px; opacity:0.8;">${icon('helpCircle', 14)}</span> ${qCount} Questions</div>
+            <div class="meta-item"><span style="vertical-align:-2px; opacity:0.8;">${icon('clock', 14)}</span> ${timeLimitText}</div>
+            <div class="meta-item"><span style="vertical-align:-2px; opacity:0.8;">${icon('users', 14)}</span> <a href="results.html?id=${f.id}" class="meta-link" style="font-weight:700; color:var(--primary);">${respCount} Submissions</a></div>
           </div>
 
           <div class="form-card-footer">
             <div class="footer-btn-group">
-              <a href="builder.html?id=${f.id}" class="btn btn-sm btn-primary">Edit Form</a>
-              <a href="responder.html?id=${f.id}&preview=true" target="_blank" class="btn btn-sm btn-outline">Preview</a>
-              <a href="results.html?id=${f.id}" class="btn btn-sm btn-secondary">Results (${respCount})</a>
+              <a href="builder.html?id=${f.id}" class="btn btn-sm btn-primary">Edit</a>
+              <a href="responder.html?id=${f.id}&preview=true" target="_blank" class="btn btn-sm btn-secondary">Preview</a>
+              <a href="results.html?id=${f.id}" class="btn btn-sm btn-outline">Results (${respCount})</a>
             </div>
 
             <div class="footer-dropdown-wrap">
-              <button class="btn-icon" onclick="App.toggleCardMenu(event, '${f.id}')">⋮</button>
+              <button class="btn-icon" style="width:32px; height:32px; border-radius:6px; background:var(--bg-surface-subtle);" onclick="App.toggleCardMenu(event, '${f.id}')">⋮</button>
               <div class="card-context-menu" id="menu_${f.id}">
                 <button onclick="App.shareForm('${f.id}')"><span style="vertical-align:-2px;">${icon('share', 14)}</span> Share & QR Code</button>
                 <button onclick="App.duplicateForm('${f.id}')"><span style="vertical-align:-2px;">${icon('form', 14)}</span> Duplicate</button>
