@@ -781,7 +781,8 @@ class FormResponder {
                             `Hello <b>${firstName}</b>! 👋\n\n` +
                             `✅ <b>Telegram Linked Successfully!</b>\n\n` +
                             `As soon as the examiner finishes reviewing and finalizes your assessment, your <b>full score report, grade, and feedback</b> will be delivered straight to this chat automatically!\n\n` +
-                            `<i>You may now return to SamForm and tap Save Delivery Channels & Finish.</i>`,
+                            `<i>You may now return to SamForm and tap Save Delivery Channels & Finish.</i>\n\n` +
+                            `<b><i>Powered by <a href="https://samsco.vercel.app">Samsco Communications</a></i></b>`,
                       parse_mode: 'HTML'
                     })
                   }).catch(() => {});

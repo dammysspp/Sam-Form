@@ -314,7 +314,7 @@ class BotDispatcher {
       `• Result Status: ${statusText}\n` +
       `• Duration: ${Utils.formatTime(responseRecord.durationSeconds || 0)}\n\n` +
       (s.remark ? `📝 EXAMINER REMARKS:\n"${s.remark}"\n\n` : '') +
-      `Generated securely via SamForm.`;
+      `Powered by Samsco Communications (https://samsco.vercel.app)`;
 
     const htmlText = `🎓 <b>SAMSCO COMMUNICATIONS — ASSESSMENT RESULT</b>\n\n` +
       `Hello <b>${Utils.escapeHTML(candidateName)}</b>,\n` +
@@ -326,7 +326,7 @@ class BotDispatcher {
       `• Result Status: <b>${statusText}</b>\n` +
       `• Duration: ${Utils.formatTime(responseRecord.durationSeconds || 0)}\n\n` +
       (s.remark ? `📝 <b>EXAMINER REMARKS:</b>\n<i>"${Utils.escapeHTML(s.remark)}"</i>\n\n` : '') +
-      `<i>Generated securely via SamForm.</i>`;
+      `<b><i>Powered by <a href="https://samsco.vercel.app">Samsco Communications</a></i></b>`;
 
     const results = {
       whatsapp: null,
