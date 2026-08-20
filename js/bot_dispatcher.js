@@ -69,11 +69,10 @@ class BotDispatcher {
     if (window.Utils) Utils.showToast('Bot & Email automation settings saved to Cloud & Local!', 'success');
   }
 
-  // --- 1. WHATSAPP DISPATCH (Direct Cloud API - Fonnte / Wablas / Custom Gateway) ---
+  // --- 1. WHATSAPP DISPATCH (Render Baileys Gateway Server) ---
   async sendWhatsAppMessage(phone, text) {
     const cfg = this.getConfig();
     let cleanPhone = phone.replace(/[^0-9]/g, '');
-    // If entered as local Nigerian number (e.g. 080..., 090..., 070...), normalize to country code 234
     if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
       cleanPhone = '234' + cleanPhone.substring(1);
     }
@@ -81,91 +80,34 @@ class BotDispatcher {
       return { success: false, reason: 'Invalid phone number format' };
     }
 
-    // A. FONNTE CLOUD REST API (100% Zero-Scan Cloud API)
-    if (cfg.whatsappApiKey && (cfg.whatsappProvider === 'fonnte' || !cfg.whatsappGatewayUrl)) {
-      try {
-        const formData = new FormData();
-        formData.append('target', cleanPhone);
-        formData.append('message', text);
-        formData.append('countryCode', '234'); // Set default country code for Nigeria
+    const gatewayUrl = cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com';
 
-        const response = await fetch('https://api.fonnte.com/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': cfg.whatsappApiKey
-          },
-          body: formData
-        });
+    // 1. Send via Render Gateway Server
+    try {
+      const endpoint = `${gatewayUrl.replace(/\/+$/, '')}/send-message`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(cfg.whatsappApiKey ? { 'Authorization': `Bearer ${cfg.whatsappApiKey}` } : {})
+        },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          message: text
+        })
+      });
 
-        const data = await response.json();
-        if (data.status === true || data.status === 'success' || data.id || data.process === 'success') {
-          return { success: true, data };
-        } else {
-          return { success: false, reason: data.reason || data.message || 'Fonnte error' };
-        }
-      } catch (err) {
-        console.error('[BotDispatcher] Fonnte API error:', err);
-        return { success: false, reason: err.message };
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const errData = await response.json().catch(() => null);
+        const errMsg = errData?.error || response.statusText;
+        return { success: false, reason: errMsg };
       }
+    } catch (err) {
+      console.error('[BotDispatcher] WhatsApp Gateway error:', err);
+      return { success: false, reason: err.message };
     }
-
-    // B. WABLAS CLOUD REST API
-    if (cfg.whatsappApiKey && cfg.whatsappProvider === 'wablas') {
-      try {
-        const domain = (cfg.whatsappDomain || 'https://api.wablas.com').replace(/\/+$/, '');
-        const response = await fetch(`${domain}/api/send-message`, {
-          method: 'POST',
-          headers: {
-            'Authorization': cfg.whatsappApiKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            phone: cleanPhone,
-            message: text
-          })
-        });
-
-        const data = await response.json();
-        if (data.status === true || data.status === 'success') {
-          return { success: true, data };
-        } else {
-          return { success: false, reason: data.message || 'Wablas error' };
-        }
-      } catch (err) {
-        console.error('[BotDispatcher] Wablas API error:', err);
-        return { success: false, reason: err.message };
-      }
-    }
-
-    // C. SELF-HOSTED GATEWAY SERVER (Option B Fallback)
-    if (cfg.whatsappGatewayUrl) {
-      try {
-        const endpoint = `${cfg.whatsappGatewayUrl.replace(/\/+$/, '')}/send-message`;
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(cfg.whatsappApiKey ? { 'Authorization': `Bearer ${cfg.whatsappApiKey}` } : {})
-          },
-          body: JSON.stringify({
-            phone: cleanPhone,
-            message: text
-          })
-        });
-
-        if (response.ok) {
-          return { success: true };
-        } else {
-          const errData = await response.text();
-          return { success: false, reason: errData || response.statusText };
-        }
-      } catch (err) {
-        console.error('[BotDispatcher] WhatsApp Gateway error:', err);
-        return { success: false, reason: err.message };
-      }
-    }
-
-    return { success: false, fallback: true, reason: 'No WhatsApp Cloud Token or Gateway URL configured' };
   }
 
   // --- 2. TELEGRAM DISPATCH (Both Personal MTProto Gateway & Bot API) ---
@@ -439,12 +381,12 @@ class BotDispatcher {
 
         <div class="modal-body" style="padding:1.5rem; max-height:75vh; overflow-y:auto;">
           
-          <!-- WhatsApp Integration Section -->
+          <!-- WhatsApp Gateway (Render) Section -->
           <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
               <div style="display:flex; align-items:center; gap:0.5rem;">
                 <span style="color:#25D366;">${icon('whatsapp', 22)}</span>
-                <strong style="font-size:1rem; color:#0f172a;">WhatsApp Cloud API (100% Zero-Scan)</strong>
+                <strong style="font-size:1rem; color:#0f172a;">WhatsApp Web Gateway (Render)</strong>
               </div>
               <label class="toggle-label" style="margin:0;">
                 <input type="checkbox" id="cfg_enable_wa" ${cfg.enableAutoWhatsApp ? 'checked' : ''} />
@@ -452,26 +394,16 @@ class BotDispatcher {
               </label>
             </div>
             <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem; line-height:1.4;">
-              Use <strong>Fonnte Cloud API</strong> (Option 2 — Zero QR scanning forever). Enter your free Fonnte API token from <a href="https://fonnte.com" target="_blank" style="color:var(--primary); font-weight:600;">fonnte.com</a>.
+              Connect your free self-hosted <code>whatsapp-gateway</code> on Render. Scan QR code once at <a href="${cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com'}/pair" target="_blank" style="color:var(--primary); font-weight:700;">${cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com'}/pair</a> to link your WhatsApp.
             </p>
 
             <div style="margin-bottom:0.75rem;">
-              <label class="form-label-sm">WhatsApp Cloud Provider</label>
-              <select id="cfg_wa_provider" class="form-input" onchange="BotDispatcherInstance.toggleWaFields(this.value)">
-                <option value="fonnte" ${cfg.whatsappProvider === 'fonnte' || !cfg.whatsappProvider ? 'selected' : ''}>Fonnte Cloud API (100% Zero-Scan)</option>
-                <option value="wablas" ${cfg.whatsappProvider === 'wablas' ? 'selected' : ''}>Wablas Cloud API</option>
-                <option value="custom_gateway" ${cfg.whatsappProvider === 'custom_gateway' ? 'selected' : ''}>Self-Hosted Gateway (Render / Railway)</option>
-              </select>
+              <label class="form-label-sm">Gateway Server URL</label>
+              <input type="url" id="cfg_wa_url" class="form-input" placeholder="e.g. https://sam-form.onrender.com" value="${Utils.escapeHTML(cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com')}" />
             </div>
-
-            <div style="margin-bottom:0.75rem;">
-              <label class="form-label-sm">WhatsApp API Token / Key</label>
-              <input type="password" id="cfg_wa_key" class="form-input" placeholder="e.g. fonnte_token_xxxxxxxx or wablas key" value="${Utils.escapeHTML(cfg.whatsappApiKey || '')}" />
-            </div>
-
-            <div id="cfg_wa_url_wrap" style="${cfg.whatsappProvider === 'custom_gateway' ? 'display:block;' : 'display:none;'}">
-              <label class="form-label-sm">Self-Hosted Gateway URL</label>
-              <input type="url" id="cfg_wa_url" class="form-input" placeholder="e.g. https://sam-form.onrender.com" value="${Utils.escapeHTML(cfg.whatsappGatewayUrl || '')}" />
+            <div>
+              <label class="form-label-sm">Gateway Secret API Key (Optional)</label>
+              <input type="password" id="cfg_wa_key" class="form-input" placeholder="Secret Token" value="${Utils.escapeHTML(cfg.whatsappApiKey || '')}" />
             </div>
           </div>
 
