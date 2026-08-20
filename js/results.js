@@ -827,6 +827,12 @@ class FormResults {
     });
 
     if (ok) {
+      // 1. Immediately remove from local memory array so UI updates instantly
+      this.responses = this.responses.filter(r => r.id !== responseId);
+      this.filterAndSort();
+      this.render();
+
+      // 2. Persist delete to Cloud & Local Storage
       await DB.deleteResponse(responseId);
       await this.reloadResponses();
       this.render();
