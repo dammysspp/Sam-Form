@@ -719,6 +719,17 @@ class FormResponder {
     return null;
   }
 
+  openTelegramBotWindow(responseId) {
+    const url = `https://t.me/samscoclawd_bot?start=result_${responseId}`;
+    try {
+      this._tgWindowRef = window.open(url, '_blank');
+      // Also fallback auto-focusing back to current tab
+      window.focus();
+    } catch (e) {
+      window.open(url, '_blank');
+    }
+  }
+
   // Live Telegram Bot Handshake Listener (Checks if candidate started bot in real-time)
   startTelegramHandshakeWatcher(responseId) {
     if (this._tgWatcherInterval) clearInterval(this._tgWatcherInterval);
@@ -768,6 +779,14 @@ class FormResponder {
                 tgInput.value = `@${fromUser.username}`;
                 tgInput.style.borderColor = '#10b981';
               }
+
+              // Auto-close the opened Telegram browser tab if accessible
+              if (this._tgWindowRef && !this._tgWindowRef.closed) {
+                try {
+                  this._tgWindowRef.close();
+                } catch (err) {}
+              }
+              window.focus();
 
               // Send instant greeting message directly to the candidate chat
               if (chatId) {
@@ -898,9 +917,9 @@ class FormResponder {
                     Tap button to start <strong>@samscoclawd_bot</strong> so it can message you your score.
                   </div>
                 </div>
-                <a href="https://t.me/samscoclawd_bot?start=result_${responseRecord.id}" target="_blank" class="btn btn-sm" style="background:#0284c7; color:#ffffff; font-weight:700; text-decoration:none; padding:0.5rem 0.85rem; display:inline-flex; align-items:center; gap:0.4rem; border-radius:6px; flex-shrink:0;">
+                <button type="button" class="btn btn-sm" onclick="Responder.openTelegramBotWindow('${responseRecord.id}')" style="background:#0284c7; color:#ffffff; font-weight:700; padding:0.5rem 0.85rem; display:inline-flex; align-items:center; gap:0.4rem; border-radius:6px; flex-shrink:0; border:none; cursor:pointer;">
                   <span style="vertical-align:-2px;">${icon('play', 12)}</span> Step 1: Start @samscoclawd_bot
-                </a>
+                </button>
               </div>
 
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1rem;">
