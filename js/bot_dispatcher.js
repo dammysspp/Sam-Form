@@ -26,11 +26,9 @@ class BotDispatcher {
 
   getConfig() {
     const defaultCfg = {
-      // WhatsApp Integration (Option 1: Self-hosted Gateway, Option 2: Fonnte Cloud API, Option 3: Wablas Cloud API)
-      whatsappProvider: 'fonnte', // 'fonnte' | 'wablas' | 'custom_gateway'
+      // WhatsApp Gateway (Option B - Self-hosted Baileys / WPPConnect server)
       whatsappGatewayUrl: '', // e.g. https://my-wa-gateway.onrender.com
-      whatsappApiKey: '', // Fonnte API Token / Wablas API Token / Secret
-      whatsappDomain: 'https://api.fonnte.com', // or wablas domain
+      whatsappApiKey: '', // Optional secret auth key
       enableAutoWhatsApp: false,
 
       // Telegram Bot API (100% Free official token)
@@ -69,22 +67,22 @@ class BotDispatcher {
     if (window.Utils) Utils.showToast('Bot & Email automation settings saved to Cloud & Local!', 'success');
   }
 
-  // --- 1. WHATSAPP DISPATCH (Render Baileys Gateway Server) ---
+  // --- 1. WHATSAPP GATEWAY DISPATCH (Option B) ---
   async sendWhatsAppMessage(phone, text) {
     const cfg = this.getConfig();
-    let cleanPhone = phone.replace(/[^0-9]/g, '');
-    if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
-      cleanPhone = '234' + cleanPhone.substring(1);
-    }
-    if (!cleanPhone || cleanPhone.length < 7) {
-      return { success: false, reason: 'Invalid phone number format' };
+    if (!cfg.whatsappGatewayUrl) {
+      console.warn('[BotDispatcher] WhatsApp Gateway URL is not configured. Falling back to native WhatsApp protocol link.');
+      return { success: false, fallback: true, reason: 'No Gateway URL' };
     }
 
-    const gatewayUrl = cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com';
+    // Clean phone number (strip +, spaces, dashes)
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    if (!cleanPhone) {
+      return { success: false, reason: 'Invalid phone number' };
+    }
 
-    // 1. Send via Render Gateway Server
     try {
-      const endpoint = `${gatewayUrl.replace(/\/+$/, '')}/send-message`;
+      const endpoint = `${cfg.whatsappGatewayUrl.replace(/\/+$/, '')}/send-message`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -100,9 +98,8 @@ class BotDispatcher {
       if (response.ok) {
         return { success: true };
       } else {
-        const errData = await response.json().catch(() => null);
-        const errMsg = errData?.error || response.statusText;
-        return { success: false, reason: errMsg };
+        const errData = await response.text();
+        return { success: false, reason: errData || response.statusText };
       }
     } catch (err) {
       console.error('[BotDispatcher] WhatsApp Gateway error:', err);
@@ -381,12 +378,12 @@ class BotDispatcher {
 
         <div class="modal-body" style="padding:1.5rem; max-height:75vh; overflow-y:auto;">
           
-          <!-- WhatsApp Gateway (Render) Section -->
+          <!-- WhatsApp Gateway (Option B) Section -->
           <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
               <div style="display:flex; align-items:center; gap:0.5rem;">
                 <span style="color:#25D366;">${icon('whatsapp', 22)}</span>
-                <strong style="font-size:1rem; color:#0f172a;">WhatsApp Web Gateway (Render)</strong>
+                <strong style="font-size:1rem; color:#0f172a;">WhatsApp Web Gateway (Option B)</strong>
               </div>
               <label class="toggle-label" style="margin:0;">
                 <input type="checkbox" id="cfg_enable_wa" ${cfg.enableAutoWhatsApp ? 'checked' : ''} />
@@ -394,12 +391,13 @@ class BotDispatcher {
               </label>
             </div>
             <p style="font-size:0.82rem; color:#64748b; margin-bottom:1rem; line-height:1.4;">
-              Connect your free self-hosted <code>whatsapp-gateway</code> on Render. Scan QR code once at <a href="${cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com'}/pair" target="_blank" style="color:var(--primary); font-weight:700;">${cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com'}/pair</a> to link your WhatsApp.
+              Connect your free self-hosted <code>whatsapp-gateway</code> (Baileys server hosted on Render/Railway). 
+              If left blank, SamForm uses the 1-tap WhatsApp protocol link.
             </p>
 
             <div style="margin-bottom:0.75rem;">
               <label class="form-label-sm">Gateway Server URL</label>
-              <input type="url" id="cfg_wa_url" class="form-input" placeholder="e.g. https://sam-form.onrender.com" value="${Utils.escapeHTML(cfg.whatsappGatewayUrl || 'https://sam-form.onrender.com')}" />
+              <input type="url" id="cfg_wa_url" class="form-input" placeholder="e.g. https://my-wa-gateway.onrender.com" value="${Utils.escapeHTML(cfg.whatsappGatewayUrl || '')}" />
             </div>
             <div>
               <label class="form-label-sm">Gateway Secret API Key (Optional)</label>
@@ -492,17 +490,9 @@ class BotDispatcher {
     document.body.appendChild(modal);
   }
 
-  toggleWaFields(provider) {
-    const wrap = document.getElementById('cfg_wa_url_wrap');
-    if (wrap) {
-      wrap.style.display = provider === 'custom_gateway' ? 'block' : 'none';
-    }
-  }
-
   handleSaveModal() {
-    const waProvider = document.getElementById('cfg_wa_provider').value;
+    const waUrl = document.getElementById('cfg_wa_url').value.trim();
     const waKey = document.getElementById('cfg_wa_key').value.trim();
-    const waUrl = document.getElementById('cfg_wa_url') ? document.getElementById('cfg_wa_url').value.trim() : '';
     const enableWa = document.getElementById('cfg_enable_wa').checked;
 
     const tgToken = document.getElementById('cfg_tg_token').value.trim();
@@ -518,9 +508,8 @@ class BotDispatcher {
     const autoOnReview = document.getElementById('cfg_auto_on_review').checked;
 
     this.saveConfig({
-      whatsappProvider: waProvider,
-      whatsappApiKey: waKey,
       whatsappGatewayUrl: waUrl,
+      whatsappApiKey: waKey,
       enableAutoWhatsApp: enableWa,
       telegramBotToken: tgToken,
       telegramApiId: tgApiId,

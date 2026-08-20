@@ -887,19 +887,17 @@ class FormResults {
       await this.updateCandidateContact(responseId, 'respondentPhone', rawPhone);
     }
 
-    // 1. Try automated background gateway / Cloud API (Fonnte / Wablas) if configured
+    // 1. Try automated background gateway if configured
     if (window.BotDispatcherInstance) {
       const cfg = BotDispatcherInstance.getConfig();
-      if ((cfg.whatsappApiKey || cfg.whatsappGatewayUrl) && phone) {
-        Utils.showToast('Sending automated WhatsApp via Cloud API...', 'info');
+      if (cfg.whatsappGatewayUrl && phone) {
+        Utils.showToast('Sending automated WhatsApp via Gateway...', 'info');
         const res = await BotDispatcherInstance.sendWhatsAppMessage(phone, this.generateScoreReportText(resp));
         if (res.success) {
           Utils.showToast(`✓ Graded result sent to WhatsApp (+${phone})!`, 'success');
           return;
         } else if (!res.fallback) {
-          console.warn('[Results] WhatsApp dispatch notice:', res.reason);
-          Utils.showToast(`WhatsApp Notice: ${res.reason}`, 'warning', 4000);
-          return;
+          console.warn('[Results] WhatsApp gateway error, opening direct chat:', res.reason);
         }
       }
     }
