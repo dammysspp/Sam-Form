@@ -204,16 +204,10 @@ class FormResponder {
             <!-- Candidate Details Form (Name Only at Beginning) -->
             <div class="intro-candidate-form">
               <h3 class="intro-candidate-title"><span style="vertical-align:-2px;">${icon('user', 18)}</span> Candidate Information</h3>
-              <div style="margin-bottom: 0.75rem;">
+              <div style="margin-bottom: 1.25rem;">
                 <label class="form-label-sm">Full Name <span class="required-star">*</span></label>
                 <input type="text" id="intro_resp_name" class="form-input" 
                   placeholder="e.g. John Doe" value="${Utils.escapeHTML(this.respondentName)}" />
-              </div>
-
-              <div style="margin-bottom: 1.25rem;">
-                <label class="form-label-sm">Student / Candidate ID (Optional)</label>
-                <input type="text" id="intro_resp_id" class="form-input" 
-                  placeholder="e.g. CAND-2026-99" value="${Utils.escapeHTML(this.respondentId || '')}" />
               </div>
 
               <button type="button" class="btn btn-primary btn-begin-assessment" onclick="Responder.handleBeginClick()">
@@ -228,7 +222,6 @@ class FormResponder {
 
   handleBeginClick() {
     const nameInput = document.getElementById('intro_resp_name');
-    const idInput = document.getElementById('intro_resp_id');
 
     const name = nameInput ? nameInput.value.trim() : '';
     if (!name) {
@@ -238,7 +231,7 @@ class FormResponder {
     }
 
     this.respondentName = name;
-    this.respondentId = idInput ? idInput.value.trim() : '';
+    this.respondentId = '';
     this.respondentEmail = '';
     this.respondentPhone = '';
     this.respondentTelegram = '';
