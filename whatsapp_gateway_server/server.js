@@ -67,6 +67,27 @@ async function backupWhatsAppSessionToCloud() {
   }
 }
 
+const ADMIN_TELEGRAM_CHAT_ID = process.env.ADMIN_TELEGRAM_CHAT_ID || '8321199114'; // @justscp
+const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8621386918:AAGxfUc5JVFlyivo_iBmJeC7ZLoxWD-m9V0';
+
+async function sendAdminTelegramAlert(text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: ADMIN_TELEGRAM_CHAT_ID,
+        text: text,
+        parse_mode: 'HTML'
+      })
+    });
+  } catch (e) {
+    console.warn('Admin Telegram notification error:', e.message);
+  }
+}
+
+let hasAlertedDisconnect = false;
+
 // --- 1. WHATSAPP GATEWAY CLIENT ---
 let sock;
 let isWhatsAppConnected = false;
@@ -106,6 +127,15 @@ async function startWhatsAppBot() {
       } catch (err) {}
 
       console.log('\n⚡ SCAN WHATSAPP QR CODE at http://localhost:' + PORT + '/pair');
+
+      if (!hasAlertedDisconnect) {
+        hasAlertedDisconnect = true;
+        sendAdminTelegramAlert(
+          `⚠️ <b>SamForm WhatsApp Alert</b>\n\n` +
+          `Your WhatsApp Gateway on Render requires linking.\n` +
+          `👉 Link now: https://sam-form.onrender.com/pair`
+        );
+      }
     }
 
     if (connection === 'close') {
@@ -118,6 +148,12 @@ async function startWhatsAppBot() {
       if (isLoggedOut) {
         try { fs.rmSync(authFolder, { recursive: true, force: true }); } catch (e) {}
         await supabase.from('app_settings').delete().eq('key', 'wa_gateway_auth_session');
+        
+        sendAdminTelegramAlert(
+          `🚨 <b>SamForm WhatsApp Disconnected</b>\n\n` +
+          `Your WhatsApp session was logged out.\n` +
+          `👉 Re-link device here: https://sam-form.onrender.com/pair`
+        );
       }
 
       setTimeout(() => startWhatsAppBot(), 3000);
@@ -126,7 +162,13 @@ async function startWhatsAppBot() {
       isWhatsAppConnected = true;
       currentQR = '';
       currentQRDataUrl = '';
+      hasAlertedDisconnect = false;
       await backupWhatsAppSessionToCloud();
+
+      sendAdminTelegramAlert(
+        `✅ <b>SamForm WhatsApp Online</b>\n\n` +
+        `WhatsApp Gateway is actively connected and ready to send score reports automatically!`
+      );
     }
   });
 }
