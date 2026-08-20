@@ -84,9 +84,10 @@ class BotDispatcher {
     // A. FONNTE CLOUD REST API (100% Zero-Scan Cloud API)
     if (cfg.whatsappApiKey && (cfg.whatsappProvider === 'fonnte' || !cfg.whatsappGatewayUrl)) {
       try {
-        const formData = new URLSearchParams();
+        const formData = new FormData();
         formData.append('target', cleanPhone);
         formData.append('message', text);
+        formData.append('countryCode', '234'); // Set default country code for Nigeria
 
         const response = await fetch('https://api.fonnte.com/send', {
           method: 'POST',
@@ -97,7 +98,7 @@ class BotDispatcher {
         });
 
         const data = await response.json();
-        if (data.status === true || data.status === 'success' || data.id) {
+        if (data.status === true || data.status === 'success' || data.id || data.process === 'success') {
           return { success: true, data };
         } else {
           return { success: false, reason: data.reason || data.message || 'Fonnte error' };
