@@ -123,61 +123,17 @@ const Utils = {
     });
   },
 
-  // SVG QR Code Generator (Compact pure JavaScript implementation)
-  generateQRCodeSVG(text, size = 180) {
+  // True Standard QR Code Generator (100% Scannable by all smartphones)
+  generateQRCodeElement(text, size = 180, containerId = 'qr-container-target') {
+    // Generate clean direct URL using standard QR API / library
     const encoded = encodeURIComponent(text);
-    const hash = this._simpleHash(text);
-    const grid = 21; // standard version 1 QR size
-    const cellSize = size / grid;
-    
-    let rects = [];
-    
-    // Finder patterns (3 corners)
-    const addFinder = (startX, startY) => {
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 7; c++) {
-          if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
-            rects.push(`<rect x="${(startX + c) * cellSize}" y="${(startY + r) * cellSize}" width="${cellSize}" height="${cellSize}" fill="#0f172a" />`);
-          }
-        }
-      }
-    };
+    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&margin=8&qzone=1`;
 
-    addFinder(0, 0);
-    addFinder(grid - 7, 0);
-    addFinder(0, grid - 7);
-
-    // Timing patterns
-    for (let i = 8; i < grid - 8; i++) {
-      if (i % 2 === 0) {
-        rects.push(`<rect x="${6 * cellSize}" y="${i * cellSize}" width="${cellSize}" height="${cellSize}" fill="#0f172a" />`);
-        rects.push(`<rect x="${i * cellSize}" y="${6 * cellSize}" width="${cellSize}" height="${cellSize}" fill="#0f172a" />`);
-      }
-    }
-
-    // Pseudo-random deterministic payload data points
-    for (let r = 0; r < grid; r++) {
-      for (let c = 0; c < grid; c++) {
-        if ((r < 8 && c < 8) || (r < 8 && c >= grid - 8) || (r >= grid - 8 && c < 8)) continue;
-        if (r === 6 || c === 6) continue;
-
-        const val = (Math.sin(hash + r * 13 + c * 37) * 10000) % 1;
-        if (Math.abs(val) > 0.48) {
-          rects.push(`<rect x="${c * cellSize}" y="${r * cellSize}" width="${cellSize}" height="${cellSize}" fill="#0f172a" />`);
-        }
-      }
-    }
-
-    return `<svg id="qr-svg-output" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="background:#ffffff; padding:10px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">${rects.join('')}</svg>`;
-  },
-
-  _simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return Math.abs(hash);
+    return `
+      <div id="${containerId}" style="display:inline-block; background:#ffffff; padding:12px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+        <img src="${qrImgUrl}" alt="Scan QR Code" width="${size}" height="${size}" style="display:block; border-radius:4px;" />
+      </div>
+    `;
   },
 
   // Deep clone object
@@ -208,7 +164,8 @@ const Utils = {
     const shareUrl = this.buildFormShareUrl(form.id, false);
     const previewUrl = this.buildFormShareUrl(form.id, true);
     const iframeSnippet = `<iframe src="${shareUrl}" width="100%" height="700px" frameborder="0" style="border:1px solid #e2e8f0; border-radius:12px;"></iframe>`;
-    const qrSVG = this.generateQRCodeSVG(shareUrl, 200);
+    const qrElement = this.generateQRCodeElement(shareUrl, 190);
+    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(shareUrl)}&margin=12&qzone=1`;
 
     const shareTitle = encodeURIComponent(`Assessment: ${form.title}`);
     const shareText = encodeURIComponent(`Please complete this assessment "${form.title}": ${shareUrl}`);
@@ -278,13 +235,13 @@ const Utils = {
             <div class="share-col-qr text-center">
               <label class="form-label-sm">Scan QR Code</label>
               <div class="qr-box-wrap" style="margin: 0.75rem auto;">
-                ${qrSVG}
+                ${qrElement}
               </div>
-              <small class="text-muted">Respondents can scan this QR code using smartphone cameras.</small>
-              <div style="margin-top: 1rem;">
-                <button class="btn btn-sm btn-outline" onclick="Utils.downloadQRSVG('${this.escapeHTML(form.title)}')">
-                  <span style="vertical-align:-2px;">${icon('download', 14)}</span> Download QR Code (SVG)
-                </button>
+              <small class="text-muted" style="display:block; margin-top:0.4rem;">Scan with any smartphone camera or QR reader app.</small>
+              <div style="margin-top: 0.85rem;">
+                <a href="${qrImgUrl}" download="samform_qr_${form.id}.png" target="_blank" class="btn btn-sm btn-outline">
+                  <span style="vertical-align:-2px;">${icon('download', 14)}</span> Download High-Res QR (PNG)
+                </a>
               </div>
             </div>
           </div>
