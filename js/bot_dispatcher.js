@@ -72,9 +72,13 @@ class BotDispatcher {
   // --- 1. WHATSAPP DISPATCH (Direct Cloud API - Fonnte / Wablas / Custom Gateway) ---
   async sendWhatsAppMessage(phone, text) {
     const cfg = this.getConfig();
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    if (!cleanPhone) {
-      return { success: false, reason: 'Invalid phone number' };
+    let cleanPhone = phone.replace(/[^0-9]/g, '');
+    // If entered as local Nigerian number (e.g. 080..., 090..., 070...), normalize to country code 234
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+      cleanPhone = '234' + cleanPhone.substring(1);
+    }
+    if (!cleanPhone || cleanPhone.length < 7) {
+      return { success: false, reason: 'Invalid phone number format' };
     }
 
     // A. FONNTE CLOUD REST API (100% Zero-Scan Cloud API)
