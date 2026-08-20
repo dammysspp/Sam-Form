@@ -328,9 +328,9 @@ const FormForgeSupabase = {
   async fetchSettingsFromCloud(key) {
     if (!this.isReady()) return null;
     try {
-      const { data, error } = await this.client.from('app_settings').select('value').eq('key', key).single();
-      if (error || !data) return null;
-      return data.value;
+      const { data, error } = await this.client.from('app_settings').select('value').eq('key', key);
+      if (error || !data || data.length === 0) return null;
+      return data[0].value;
     } catch (err) {
       return null;
     }
