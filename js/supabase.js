@@ -14,6 +14,7 @@ const FormForgeSupabase = {
   client: null,
 
   init() {
+    if (this.client) return true;
     if (this.config.url && this.config.anonKey && window.supabase) {
       try {
         this.client = window.supabase.createClient(this.config.url, this.config.anonKey);
@@ -27,6 +28,9 @@ const FormForgeSupabase = {
   },
 
   isReady() {
+    if (!this.client && window.supabase) {
+      this.init();
+    }
     return !!(this.client && this.config.enabled);
   },
 
@@ -267,12 +271,22 @@ const FormForgeSupabase = {
   },
 
   async getDeletedResponseIds() {
+    let localDeleted = [];
     try {
-      const list = await this.fetchSettingsFromCloud('deleted_response_ids');
-      return Array.isArray(list) ? list : [];
-    } catch (e) {
-      return [];
-    }
+      const stored = localStorage.getItem('formforge_deleted_response_ids');
+      if (stored) localDeleted = JSON.parse(stored);
+    } catch (e) {}
+
+    try {
+      const cloudList = await this.fetchSettingsFromCloud('deleted_response_ids');
+      if (Array.isArray(cloudList)) {
+        const merged = Array.from(new Set([...localDeleted, ...cloudList]));
+        localStorage.setItem('formforge_deleted_response_ids', JSON.stringify(merged));
+        return merged;
+      }
+    } catch (e) {}
+
+    return localDeleted;
   },
 
   async markResponseAsDeleted(responseId) {
@@ -280,6 +294,7 @@ const FormForgeSupabase = {
       const current = await this.getDeletedResponseIds();
       if (!current.includes(responseId)) {
         current.push(responseId);
+        localStorage.setItem('formforge_deleted_response_ids', JSON.stringify(current));
         await this.syncSettingsToCloud('deleted_response_ids', current);
       }
       return true;
@@ -289,19 +304,19 @@ const FormForgeSupabase = {
   },
 
   async deleteResponseFromCloud(responseId) {
-    if (!this.isReady()) return false;
-    try {
-      // 1. Try direct SQL row delete
-      await this.client.from('responses').delete().eq('id', responseId);
+    // 1. Mark in permanent deleted registry (both localStorage and Supabase Cloud)
+    await this.markResponseAsDeleted(responseId);
 
-      // 2. Mark in global deleted registry in app_settings (Bypasses all PostgreSQL table locks & RLS!)
-      await this.markResponseAsDeleted(responseId);
-
-      return true;
-    } catch (err) {
-      console.warn('Cloud delete response error:', err);
-      return false;
+    // 2. Also attempt direct SQL row delete
+    if (this.isReady()) {
+      try {
+        await this.client.from('responses').delete().eq('id', responseId);
+      } catch (err) {
+        console.warn('Cloud delete response notice:', err);
+      }
     }
+
+    return true;
   },
 
   // --- BOT & PLATFORM CONFIG SYNC (SUPABASE CLOUD) ---
