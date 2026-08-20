@@ -1085,21 +1085,24 @@ class FormResponder {
       if (msg) {
         msg.innerHTML = `
           <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:0.85rem; margin-top:0.75rem;">
-            <div style="color:#065f46; font-weight:700; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem;">
+            <div style="color:#065f46; font-weight:700; display:flex; align-items:center; gap:0.4rem;">
               ${icon('check', 16)} Delivery channels saved successfully!
             </div>
-            <p style="font-size:0.82rem; color:#047857; margin-bottom:0.6rem;">
-              To guarantee immediate delivery to your Telegram, tap below to connect with our official bot and press <strong>START</strong>:
+            <p style="font-size:0.82rem; color:#047857; margin-top:0.3rem; margin-bottom:0;">
+              Your graded report and feedback will be dispatched automatically once the examiner finalizes the assessment.
             </p>
-            <a href="https://t.me/samscoclawd_bot?start=result_${responseId}" target="_blank" class="btn btn-sm" style="background:#229ED9; color:#fff; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
-              <span style="vertical-align:-2px;">${icon('telegram', 14)}</span> Open @samscoclawd_bot & Tap START
-            </a>
           </div>
         `;
       }
       if (phoneInput) phoneInput.disabled = true;
       if (tgInput) tgInput.disabled = true;
       if (emailInput) emailInput.disabled = true;
+      const saveBtn = document.querySelector('button[onclick*="savePostSubmissionContacts"]');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saved ✓';
+        saveBtn.classList.replace('btn-primary', 'btn-secondary');
+      }
       Utils.showToast('Delivery channels saved!', 'success');
     } catch (e) {
       console.error('Error saving post-submission contacts', e);
