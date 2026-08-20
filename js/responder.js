@@ -841,24 +841,40 @@ class FormResponder {
                   <span style="color:var(--primary);">${icon('send', 20)}</span>
                   <strong style="font-size:1.05rem; color:var(--text-main);">Where should we send your results?</strong>
                 </div>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-                  Please enter your WhatsApp phone number, Telegram handle, or Email so your graded report can be dispatched directly to you.
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.45;">
+                  Enter your contact details below. For instant automated delivery straight into your Telegram app, tap the blue button to connect with our official bot!
                 </p>
+
+                <!-- 1-Tap Telegram Bot Connect Action Banner -->
+                <div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:8px; padding:0.9rem; margin-bottom:1.15rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+                  <div>
+                    <div style="font-weight:700; color:#0369a1; font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
+                      <span style="color:#0284c7;">${icon('telegram', 16)}</span> Required for Telegram Delivery:
+                    </div>
+                    <div style="font-size:0.78rem; color:#0c4a6e; margin-top:2px;">
+                      Tap button below to start <strong>@samscoclawd_bot</strong> so it can message you your score.
+                    </div>
+                  </div>
+                  <a href="https://t.me/samscoclawd_bot?start=result_${responseRecord.id}" target="_blank" class="btn btn-sm" style="background:#0284c7; color:#ffffff; font-weight:700; text-decoration:none; padding:0.5rem 0.85rem; display:inline-flex; align-items:center; gap:0.4rem; border-radius:6px; flex-shrink:0;">
+                    <span style="vertical-align:-2px;">${icon('play', 12)}</span> Step 1: Start @samscoclawd_bot
+                  </a>
+                </div>
+
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1rem;">
                   <div>
                     <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('whatsapp', 13)}</span> WhatsApp Phone</label>
                     <input type="tel" id="post_resp_phone" class="form-input" placeholder="+234..." />
                   </div>
                   <div>
-                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('telegram', 13)}</span> Telegram (@user / phone)</label>
-                    <input type="text" id="post_resp_telegram" class="form-input" placeholder="@john_doe" />
+                    <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('telegram', 13)}</span> Step 2: Your Telegram Username</label>
+                    <input type="text" id="post_resp_telegram" class="form-input" placeholder="@your_username" />
                   </div>
                   <div>
                     <label class="form-label-sm"><span style="vertical-align:-1px;">${icon('mail', 13)}</span> Email Address</label>
                     <input type="email" id="post_resp_email" class="form-input" placeholder="student@example.com" />
                   </div>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="Responder.savePostSubmissionContacts('${responseRecord.id}')">
+                <button type="button" class="btn btn-primary" style="width:100%; font-weight:700; padding:0.75rem;" onclick="Responder.savePostSubmissionContacts('${responseRecord.id}')">
                   Save Delivery Channels & Finish
                 </button>
                 <div id="post_contact_msg" style="margin-top:0.6rem; font-size:0.85rem;"></div>

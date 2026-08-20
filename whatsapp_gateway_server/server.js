@@ -380,7 +380,52 @@ app.post('/send-email', async (req, res) => {
   }
 });
 
+// 6. TELEGRAM BOT START LISTENER (Replies with Instant Confirmation & Greeting)
+let lastTelegramUpdateId = 0;
+
+async function pollTelegramBotUpdates() {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateId + 1}&timeout=10`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.result)) {
+        for (const update of data.result) {
+          lastTelegramUpdateId = update.update_id;
+
+          const msg = update.message;
+          if (msg && msg.text && msg.text.startsWith('/start')) {
+            const chatId = msg.chat.id;
+            const firstName = msg.from.first_name || 'Candidate';
+            
+            console.log(`✓ Candidate @${msg.from.username || msg.from.id} (${firstName}) tapped /start on @samscoclawd_bot`);
+
+            // Send instant professional greeting & confirmation
+            await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: `🎓 <b>SamForm Assessment Bot</b>\n\n` +
+                      `Hello <b>${firstName}</b>! 👋\n\n` +
+                      `✅ Your Telegram has been linked successfully.\n\n` +
+                      `As soon as the examiner finishes reviewing and finalizes your assessment, your <b>full score report, grade, and feedback</b> will be delivered straight to this chat automatically!\n\n` +
+                      `<i>You may now return to SamForm and finish your submission.</i>`,
+                parse_mode: 'HTML'
+              })
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    // Silent catch for network polling
+  }
+
+  setTimeout(pollTelegramBotUpdates, 3000);
+}
+
 app.listen(PORT, () => {
   console.log(`\n🚀 SamForm Gateway running on port ${PORT}`);
   startWhatsAppBot();
+  pollTelegramBotUpdates();
 });
