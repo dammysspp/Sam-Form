@@ -7,6 +7,7 @@ class FormResults {
     this.form = null;
     this.responses = [];
     this.filteredResponses = [];
+    this.selectedResponseIds = new Set();
     this.searchTerm = '';
     this.filterStatus = 'all'; // all | graded | pending
     this.sortField = 'submittedAt';
@@ -196,10 +197,35 @@ class FormResults {
             </div>
           </div>
 
+          <!-- Multi-Select Bulk Actions Bar (Shown when 1+ selected) -->
+          ${this.selectedResponseIds.size > 0 ? `
+            <div style="background:#eef2ff; border:1px solid #c7d2fe; padding:0.65rem 1.25rem; border-radius:var(--radius-sm); margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; animation:fadeIn 0.15s ease-out;">
+              <div style="font-size:0.9rem; font-weight:700; color:#3730a3; display:flex; align-items:center; gap:0.5rem;">
+                <span>✓ ${this.selectedResponseIds.size} response(s) selected</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <button class="btn btn-sm btn-danger" onclick="Results.bulkDeleteSelected()">
+                  ✕ Delete Selected (${this.selectedResponseIds.size})
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="Results.clearSelection()">
+                  Deselect All
+                </button>
+              </div>
+            </div>
+          ` : ''}
+
           <div class="responsive-table-wrap">
             <table class="data-table">
               <thead>
                 <tr>
+                  <th style="width:40px; text-align:center;">
+                    <input type="checkbox" 
+                      id="select_all_checkbox"
+                      style="cursor:pointer; width:16px; height:16px; accent-color:var(--primary);"
+                      ${this.filteredResponses.length > 0 && this.filteredResponses.every(r => this.selectedResponseIds.has(r.id)) ? 'checked' : ''}
+                      onchange="Results.toggleSelectAll(this.checked)" 
+                      title="Select / Deselect All" />
+                  </th>
                   <th onclick="Results.setSort('respondentName')">Respondent / Candidate ↕</th>
                   <th onclick="Results.setSort('score')">Score ↕</th>
                   <th onclick="Results.setSort('percentage')">Percentage ↕</th>
@@ -212,12 +238,19 @@ class FormResults {
               </thead>
               <tbody>
                 ${this.filteredResponses.length === 0 ? `
-                  <tr><td colspan="8" class="text-center py-4 text-muted">No responses found matching your criteria.</td></tr>
+                  <tr><td colspan="9" class="text-center py-4 text-muted">No responses found matching your criteria.</td></tr>
                 ` : this.filteredResponses.map(r => {
                   const s = r.scoring || {};
                   const isGraded = s.isFullyGraded;
+                  const isSelected = this.selectedResponseIds.has(r.id);
                   return `
-                    <tr>
+                    <tr style="${isSelected ? 'background:#f8fafc;' : ''}">
+                      <td style="text-align:center;">
+                        <input type="checkbox" 
+                          style="cursor:pointer; width:16px; height:16px; accent-color:var(--primary);"
+                          ${isSelected ? 'checked' : ''} 
+                          onchange="Results.toggleSelectOne('${r.id}', this.checked)" />
+                      </td>
                       <td>
                         <strong>${Utils.escapeHTML(r.respondentName || 'Candidate')}</strong>
                         ${r.respondentId ? `<span class="badge" style="font-size:0.7rem; margin-left:4px;">ID: ${Utils.escapeHTML(r.respondentId)}</span>` : ''}
@@ -360,6 +393,47 @@ class FormResults {
       ctx.fillStyle = '#64748b';
       ctx.fillText(item.label, x + (barWidth - 12) / 2, height - 10);
     });
+  }
+
+  // --- MULTI-SELECT HANDLERS ---
+  toggleSelectAll(checked) {
+    if (checked) {
+      this.filteredResponses.forEach(r => this.selectedResponseIds.add(r.id));
+    } else {
+      this.selectedResponseIds.clear();
+    }
+    this.render();
+  }
+
+  toggleSelectOne(responseId, checked) {
+    if (checked) {
+      this.selectedResponseIds.add(responseId);
+    } else {
+      this.selectedResponseIds.delete(responseId);
+    }
+    this.render();
+  }
+
+  clearSelection() {
+    this.selectedResponseIds.clear();
+    this.render();
+  }
+
+  async bulkDeleteSelected() {
+    const count = this.selectedResponseIds.size;
+    if (count === 0) return;
+
+    if (!confirm(`Are you sure you want to permanently delete all ${count} selected response(s)?`)) return;
+
+    const ids = Array.from(this.selectedResponseIds);
+    for (const id of ids) {
+      await DB.deleteResponse(id);
+    }
+
+    this.selectedResponseIds.clear();
+    await this.reloadResponses();
+    this.render();
+    Utils.showToast(`Deleted ${count} responses successfully!`, 'success');
   }
 
   // --- FILTERS & SORT ---
