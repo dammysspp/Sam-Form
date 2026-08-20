@@ -726,7 +726,63 @@ class FormResponder {
     return null;
   }
 
-  // --- SUBMISSION ---
+  // Live Telegram Bot Handshake Listener (Checks if candidate started bot in real-time)
+  startTelegramHandshakeWatcher(responseId) {
+    if (this._tgWatcherInterval) clearInterval(this._tgWatcherInterval);
+
+    const token = '8621386918:AAGxfUc5JVFlyivo_iBmJeC7ZLoxWD-m9V0';
+    let attempts = 0;
+
+    this._tgWatcherInterval = setInterval(async () => {
+      attempts++;
+      if (attempts > 60) { // Poll for 3 minutes
+        clearInterval(this._tgWatcherInterval);
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ok && Array.isArray(data.result)) {
+            // Find recent start command matching this response or candidate
+            const match = data.result.slice(-10).reverse().find(u => {
+              const text = u.message?.text || '';
+              return text.includes(`result_${responseId}`) || text.startsWith('/start');
+            });
+
+            if (match) {
+              const fromUser = match.message?.from;
+              const username = fromUser?.username ? `@${fromUser.username}` : (fromUser?.first_name || 'Verified');
+              
+              const banner = document.getElementById('tg-handshake-banner');
+              const tgInput = document.getElementById('post_resp_telegram');
+              
+              if (banner) {
+                banner.innerHTML = `
+                  <div style="display:flex; align-items:center; gap:0.5rem; color:#166534; font-weight:700; font-size:0.9rem;">
+                    <span style="color:#16a34a; font-size:1.1rem;">${icon('check', 18)}</span>
+                    Telegram Bot Verified! Connected as <strong>${Utils.escapeHTML(username)}</strong>
+                  </div>
+                `;
+                banner.style.background = '#f0fdf4';
+                banner.style.borderColor = '#86efac';
+              }
+
+              if (tgInput && fromUser?.username && !tgInput.value) {
+                tgInput.value = `@${fromUser.username}`;
+                tgInput.style.borderColor = '#10b981';
+              }
+
+              clearInterval(this._tgWatcherInterval);
+            }
+          }
+        }
+      } catch (e) {}
+    }, 2500);
+  }
+
+  // --- SUBMISSION LOGIC ---
   async confirmSubmission() {
     if (!this.validateCurrentSection()) return;
 
@@ -818,7 +874,7 @@ class FormResponder {
               </p>
 
               <!-- 1-Tap Telegram Bot Connect Action Banner -->
-              <div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:8px; padding:0.9rem; margin-bottom:1.15rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+              <div id="tg-handshake-banner" style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:8px; padding:0.9rem; margin-bottom:1.15rem; display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
                 <div>
                   <div style="font-weight:700; color:#0369a1; font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
                     <span style="color:#0284c7;">${icon('telegram', 16)}</span> Required for Telegram Delivery:
@@ -860,6 +916,9 @@ class FormResponder {
           </div>
         </div>
       `;
+
+      // Start live Telegram Bot Handshake listener
+      this.startTelegramHandshakeWatcher(responseRecord.id);
       return;
     }
 
