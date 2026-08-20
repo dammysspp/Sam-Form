@@ -83,6 +83,9 @@ class BotDispatcher {
 
     try {
       const endpoint = `${cfg.whatsappGatewayUrl.replace(/\/+$/, '')}/send-message`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -92,18 +95,31 @@ class BotDispatcher {
         body: JSON.stringify({
           phone: cleanPhone,
           message: text
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         return { success: true };
       } else {
-        const errData = await response.text();
-        return { success: false, reason: errData || response.statusText };
+        let errMsg = 'Failed to send WhatsApp';
+        try {
+          const errData = await response.json();
+          errMsg = errData.error || errMsg;
+        } catch (e) {
+          errMsg = await response.text();
+        }
+        return { success: false, reason: errMsg };
       }
     } catch (err) {
-      console.error('[BotDispatcher] WhatsApp Gateway error:', err);
-      return { success: false, reason: err.message };
+      console.warn('[BotDispatcher] WhatsApp Gateway notice:', err.message);
+      const isTimeout = err.name === 'AbortError';
+      return { 
+        success: false, 
+        reason: isTimeout ? 'Server response timed out (Render cold start)' : err.message 
+      };
     }
   }
 
