@@ -76,7 +76,10 @@ class BotDispatcher {
     }
 
     // Clean phone number (strip +, spaces, dashes)
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    let cleanPhone = phone.replace(/[^0-9]/g, '');
+    if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+      cleanPhone = '234' + cleanPhone.substring(1);
+    }
     if (!cleanPhone) {
       return { success: false, reason: 'Invalid phone number' };
     }

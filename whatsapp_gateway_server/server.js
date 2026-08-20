@@ -307,17 +307,22 @@ app.post('/send-message', async (req, res) => {
   const { phone, message } = req.body;
   if (!phone || !message) return res.status(400).json({ error: 'Missing phone or message' });
 
-  if (!isWhatsAppConnected) {
+  if (!isWhatsAppConnected || !sock) {
     return res.status(503).json({ error: 'WhatsApp bot is not connected yet. Visit /pair to scan QR code.' });
   }
 
-  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  let cleanPhone = phone.replace(/[^0-9]/g, '');
+  // If user entered local Nigerian number starting with 0 (e.g. 09072483594), convert to international 2349072483594
+  if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+    cleanPhone = '234' + cleanPhone.substring(1);
+  }
+
   const jid = `${cleanPhone}@s.whatsapp.net`;
 
   try {
     const sent = await sock.sendMessage(jid, { text: message });
     console.log(`✓ Result sent to WhatsApp: +${cleanPhone}`);
-    return res.json({ success: true, messageId: sent.key.id });
+    return res.json({ success: true, messageId: sent.key?.id });
   } catch (err) {
     console.error('Error sending WhatsApp message:', err);
     return res.status(500).json({ error: err.message });
