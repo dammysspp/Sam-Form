@@ -141,19 +141,27 @@ async function startWhatsAppBot() {
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const isLoggedOut = statusCode === DisconnectReason.loggedOut;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+      
+      console.log(`[WhatsApp] Connection closed. Status code: ${statusCode}, isLoggedOut: ${isLoggedOut}, shouldReconnect: ${shouldReconnect}`);
+
       isWhatsAppConnected = false;
       currentQR = '';
       currentQRDataUrl = '';
 
+      if (!hasAlertedDisconnect) {
+        hasAlertedDisconnect = true;
+        sendAdminTelegramAlert(
+          `🚨 <b>SamForm WhatsApp Disconnected</b>\n\n` +
+          `Status: Disconnected (Code ${statusCode || 'Unknown'})\n` +
+          `${isLoggedOut ? '⚠️ Session was logged out. Please scan fresh QR.' : '🔄 Reconnecting automatically...'}\n` +
+          `👉 Check status: https://sam-form.onrender.com/pair`
+        );
+      }
+
       if (isLoggedOut) {
         try { fs.rmSync(authFolder, { recursive: true, force: true }); } catch (e) {}
         await supabase.from('app_settings').delete().eq('key', 'wa_gateway_auth_session');
-        
-        sendAdminTelegramAlert(
-          `🚨 <b>SamForm WhatsApp Disconnected</b>\n\n` +
-          `Your WhatsApp session was logged out.\n` +
-          `👉 Re-link device here: https://sam-form.onrender.com/pair`
-        );
       }
 
       setTimeout(() => startWhatsAppBot(), 3000);
@@ -166,8 +174,8 @@ async function startWhatsAppBot() {
       await backupWhatsAppSessionToCloud();
 
       sendAdminTelegramAlert(
-        `✅ <b>SamForm WhatsApp Online</b>\n\n` +
-        `WhatsApp Gateway is actively connected and ready to send score reports automatically!`
+        `✅ <b>SamForm WhatsApp Connected!</b>\n\n` +
+        `WhatsApp Gateway is actively connected and ready to send score reports automatically.`
       );
     }
   });
