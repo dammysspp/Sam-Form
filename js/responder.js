@@ -788,9 +788,10 @@ class FormResponder {
               }
               window.focus();
 
-              // Send instant greeting message directly to the candidate chat
+              // Send instant greeting message directly to the candidate chat with a 1-tap Return to Form button
               if (chatId) {
                 try {
+                  const returnUrl = window.location.href;
                   fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -800,9 +801,16 @@ class FormResponder {
                             `Hello <b>${firstName}</b>! 👋\n\n` +
                             `✅ <b>Telegram Linked Successfully!</b>\n\n` +
                             `As soon as the examiner finishes reviewing and finalizes your assessment, your <b>full score report, grade, and feedback</b> will be delivered straight to this chat automatically!\n\n` +
-                            `<i>You may now return to SamForm and tap Save Delivery Channels & Finish.</i>\n\n` +
+                            `<i>Tap the button below to return to your assessment and finalize:</i>\n\n` +
                             `<b><i>Powered by <a href="https://samsco.vercel.app">Samsco Communications</a></i></b>`,
-                      parse_mode: 'HTML'
+                      parse_mode: 'HTML',
+                      reply_markup: {
+                        inline_keyboard: [
+                          [
+                            { text: '🔙 Return to SamForm', url: returnUrl }
+                          ]
+                        ]
+                      }
                     })
                   }).catch(() => {});
                 } catch (err) {}
