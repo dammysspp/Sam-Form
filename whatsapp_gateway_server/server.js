@@ -72,7 +72,7 @@ const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8621386918:AAGxfUc5JVFly
 
 async function sendAdminTelegramAlert(text) {
   try {
-    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+    const res = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -81,12 +81,21 @@ async function sendAdminTelegramAlert(text) {
         parse_mode: 'HTML'
       })
     });
+    const json = await res.json();
+    console.log(`[Telegram Admin Alert] Alert sent (status: ${json.ok})`);
   } catch (e) {
-    console.warn('Admin Telegram notification error:', e.message);
+    console.warn('[Telegram Admin Alert] Failed to send alert:', e.message);
   }
 }
 
-let hasAlertedDisconnect = false;
+let lastAlertTime = 0;
+function shouldThrottleAlert() {
+  const now = Date.now();
+  // Don't send more than 1 alert every 5 minutes to avoid spam
+  if (now - lastAlertTime < 5 * 60 * 1000) return true;
+  lastAlertTime = now;
+  return false;
+}
 
 // --- 1. WHATSAPP GATEWAY CLIENT ---
 let sock;
@@ -128,12 +137,11 @@ async function startWhatsAppBot() {
 
       console.log('\n⚡ SCAN WHATSAPP QR CODE at http://localhost:' + PORT + '/pair');
 
-      if (!hasAlertedDisconnect) {
-        hasAlertedDisconnect = true;
+      if (!shouldThrottleAlert()) {
         sendAdminTelegramAlert(
           `⚠️ <b>SamForm WhatsApp Alert</b>\n\n` +
-          `Your WhatsApp Gateway on Render requires linking.\n` +
-          `👉 Link now: https://sam-form.onrender.com/pair`
+          `Your WhatsApp Gateway requires linking.\n` +
+          `👉 Scan QR now: https://sam-form.onrender.com/pair`
         );
       }
     }
@@ -149,8 +157,7 @@ async function startWhatsAppBot() {
       currentQR = '';
       currentQRDataUrl = '';
 
-      if (!hasAlertedDisconnect) {
-        hasAlertedDisconnect = true;
+      if (!shouldThrottleAlert()) {
         sendAdminTelegramAlert(
           `🚨 <b>SamForm WhatsApp Disconnected</b>\n\n` +
           `Status: Disconnected (Code ${statusCode || 'Unknown'})\n` +
@@ -170,8 +177,6 @@ async function startWhatsAppBot() {
       isWhatsAppConnected = true;
       currentQR = '';
       currentQRDataUrl = '';
-      hasAlertedDisconnect = false;
-      await backupWhatsAppSessionToCloud();
 
       sendAdminTelegramAlert(
         `✅ <b>SamForm WhatsApp Connected!</b>\n\n` +
@@ -434,4 +439,14 @@ app.listen(PORT, () => {
   console.log(`\n🚀 SamForm Gateway running on port ${PORT}`);
   startWhatsAppBot();
   pollTelegramBotUpdates();
+
+  // Self-keepalive pinger to prevent Render instance from entering sleep mode
+  setInterval(() => {
+    fetch('https://sam-form.onrender.com/health')
+      .then(res => res.json())
+      .then(data => {
+        console.log(`[KeepAlive] Ping ok. WA Connected: ${data.whatsappConnected}`);
+      })
+      .catch(err => console.warn('[KeepAlive] Ping notice:', err.message));
+  }, 10 * 60 * 1000); // Every 10 minutes
 });
