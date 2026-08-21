@@ -296,17 +296,13 @@ const FormForgeSupabase = {
     // 1. Mark in permanent deleted local registry
     await this.markResponseAsDeleted(responseId);
 
-    // 2. Also flag or delete row directly in responses table
+    // 2. Delete row from Supabase responses table
     if (this.isReady()) {
       try {
-        // Direct delete
         await this.client.from('responses').delete().eq('id', responseId);
-        
-        // Soft delete update fallback inside answers JSON
-        await this.client.from('responses').update({
-          answers: { _metadata: { is_deleted: true } }
-        }).eq('id', responseId);
-      } catch (err) {}
+      } catch (err) {
+        console.warn('Cloud delete response notice:', err);
+      }
     }
 
     return true;
