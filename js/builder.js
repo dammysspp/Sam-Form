@@ -242,7 +242,7 @@ class FormBuilder {
           </div>
 
           <div class="questions-list" id="q_list_${sec.id}">
-            ${secQuestions.map((q, idx) => QuestionsEngine.renderBuilderCard(q, idx, secQuestions.length, sections)).join('')}
+            ${secQuestions.map((q, idx) => QuestionsEngine.renderBuilderCard(q, idx, secQuestions.length, sections, this.form.mode)).join('')}
           </div>
 
           <div class="section-add-q-bar">
@@ -334,32 +334,43 @@ class FormBuilder {
           </div>
         </div>
 
-        <div class="setting-group">
-          <label class="setting-title">Scoring & Results Disclosure</label>
-          <div class="toggle-row" style="margin-bottom:1rem;">
-            <label class="toggle-label">
-              <input type="checkbox" ${s.showScoreAfterSubmission !== false ? 'checked' : ''} 
-                onchange="Builder.updateSetting('showScoreAfterSubmission', this.checked)" />
-              <span><strong>Reveal Scores Immediately Upon Submission</strong></span>
-            </label>
-            <p class="text-muted" style="font-size:0.8rem; margin:0.25rem 0 0 1.75rem;">
-              When unchecked, candidate scores will be hidden after submission. Candidates who did not provide an email will be prompted to enter one so results can be delivered later.
+        ${this.form.mode !== 'survey' ? `
+          <div class="setting-group">
+            <label class="setting-title">Scoring & Results Disclosure</label>
+            <div class="toggle-row" style="margin-bottom:1rem;">
+              <label class="toggle-label">
+                <input type="checkbox" ${s.showScoreAfterSubmission !== false ? 'checked' : ''} 
+                  onchange="Builder.updateSetting('showScoreAfterSubmission', this.checked)" />
+                <span><strong>Reveal Scores Immediately Upon Submission</strong></span>
+              </label>
+              <p class="text-muted" style="font-size:0.8rem; margin:0.25rem 0 0 1.75rem;">
+                When unchecked, candidate scores will be hidden after submission. Candidates who did not provide an email will be prompted to enter one so results can be delivered later.
+              </p>
+            </div>
+
+            <div class="grid-2-col">
+              <div>
+                <label class="form-label-sm">Passing Score Percentage (%)</label>
+                <input type="number" min="0" max="100" class="form-input" value="${this.form.passingScore || 60}" 
+                  oninput="Builder.updateFormProp('passingScore', parseFloat(this.value) || 0)" />
+              </div>
+              <div>
+                <label class="form-label-sm">Negative Marking Penalty (Points subtracted per wrong answer)</label>
+                <input type="number" min="0" max="10" step="0.25" class="form-input" value="${s.negativeMarking || 0}" 
+                  oninput="Builder.updateSetting('negativeMarking', parseFloat(this.value) || 0)" />
+              </div>
+            </div>
+          </div>
+        ` : `
+          <div class="setting-group" style="background:#f0fdf4; border-color:#86efac; padding:1rem 1.25rem; border-radius:var(--radius-md);">
+            <div style="font-weight:700; color:#166534; font-size:0.92rem; display:flex; align-items:center; gap:0.5rem;">
+              <span>${icon('check', 18)}</span> Unscored Survey Mode Active
+            </div>
+            <p style="font-size:0.84rem; color:#15803d; margin-top:0.25rem; margin-bottom:0;">
+              In Survey mode, all questions are unscored. Respondents simply submit responses without grades, marks, or passing criteria.
             </p>
           </div>
-
-          <div class="grid-2-col">
-            <div>
-              <label class="form-label-sm">Passing Score Percentage (%)</label>
-              <input type="number" min="0" max="100" class="form-input" value="${this.form.passingScore || 60}" 
-                oninput="Builder.updateFormProp('passingScore', parseFloat(this.value) || 0)" />
-            </div>
-            <div>
-              <label class="form-label-sm">Negative Marking Penalty (Points subtracted per wrong answer)</label>
-              <input type="number" min="0" max="10" step="0.25" class="form-input" value="${s.negativeMarking || 0}" 
-                oninput="Builder.updateSetting('negativeMarking', parseFloat(this.value) || 0)" />
-            </div>
-          </div>
-        </div>
+        `}
 
         <div class="setting-group">
           <label class="setting-title">Form Status & Access</label>
@@ -1017,10 +1028,19 @@ class FormBuilder {
     const timeEl = document.getElementById('stats-time-total');
 
     const totalQuestions = this.form.questions?.length || 0;
-    const totalPoints = (this.form.questions || []).reduce((acc, q) => acc + (parseFloat(q.points) || 0), 0);
+    const isSurvey = this.form.mode === 'survey';
+    const totalPoints = isSurvey ? 0 : (this.form.questions || []).reduce((acc, q) => acc + (parseFloat(q.points) || 0), 0);
 
     if (countEl) countEl.textContent = `${totalQuestions} Questions`;
-    if (pointsEl) pointsEl.textContent = `${totalPoints} Total Points`;
+    if (pointsEl) {
+      if (isSurvey) {
+        pointsEl.textContent = 'Unscored Survey';
+        pointsEl.style.color = '#10b981';
+      } else {
+        pointsEl.textContent = `${totalPoints} Total Points`;
+        pointsEl.style.color = '';
+      }
+    }
     if (timeEl) timeEl.textContent = this.form.timeLimit ? `${this.form.timeLimit} Mins` : 'Untimed';
   }
 

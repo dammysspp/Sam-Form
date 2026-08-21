@@ -96,9 +96,10 @@ const QuestionsEngine = {
   // ----------------------------------------------------
   // BUILDER CARD RENDERER (Admin Mode)
   // ----------------------------------------------------
-  renderBuilderCard(question, index, total, sections = []) {
+  renderBuilderCard(question, index, total, sections = [], formMode = 'exam') {
     const qid = question.id;
     const type = question.type;
+    const isSurvey = formMode === 'survey';
 
     let typeOptionsHTML = Object.entries(QuestionTypeLabels)
       .map(([val, info]) => `<option value="${val}" ${val === type ? 'selected' : ''}>${info.icon} ${info.label}</option>`)
@@ -118,12 +119,14 @@ const QuestionsEngine = {
 
         return `
           <div class="option-row" data-opt-idx="${optIdx}">
-            <label class="correct-answer-selector" title="Mark as correct answer">
-              <input type="${isMulti ? 'checkbox' : 'radio'}" name="ans_${qid}" 
-                ${isChecked ? 'checked' : ''} 
-                onchange="Builder.setCorrectAnswer('${qid}', ${optIdx}, this.checked, ${isMulti})" />
-              <span class="custom-check-bullet"></span>
-            </label>
+            ${!isSurvey ? `
+              <label class="correct-answer-selector" title="Mark as correct answer">
+                <input type="${isMulti ? 'checkbox' : 'radio'}" name="ans_${qid}" 
+                  ${isChecked ? 'checked' : ''} 
+                  onchange="Builder.setCorrectAnswer('${qid}', ${optIdx}, this.checked, ${isMulti})" />
+                <span class="custom-check-bullet"></span>
+              </label>
+            ` : `<span style="color:var(--text-muted); font-size:0.85rem; padding:0 4px;">•</span>`}
             <input type="text" class="form-input option-input" value="${Utils.escapeHTML(opt)}" 
               placeholder="Option ${optIdx + 1}"
               oninput="Builder.updateOption('${qid}', ${optIdx}, this.value)" />
@@ -135,9 +138,11 @@ const QuestionsEngine = {
 
       specificEditorHTML = `
         <div class="options-container" id="options_${qid}">
-          <div class="options-header-hint">
-            <small class="text-muted">Tip: Click the circle/checkbox on the left to set the correct answer.</small>
-          </div>
+          ${!isSurvey ? `
+            <div class="options-header-hint">
+              <small class="text-muted">Tip: Click the circle/checkbox on the left to set the correct answer.</small>
+            </div>
+          ` : ''}
           ${optionsList}
           <button type="button" class="btn btn-sm btn-outline btn-add-option" onclick="Builder.addOption('${qid}')">
             + Add Option
@@ -301,22 +306,26 @@ const QuestionsEngine = {
         <div class="q-card-body">
           ${specificEditorHTML}
           
-          <div class="q-explanation-row">
-            <label class="form-label-sm">Study Mode Explanation / Feedback (Shown after answering in Quiz mode)</label>
-            <textarea class="form-textarea form-textarea-sm" placeholder="Explain why the correct answer is right..." 
-              oninput="Builder.updateQuestionProp('${qid}', 'explanation', this.value)">${Utils.escapeHTML(question.explanation || '')}</textarea>
-          </div>
+          ${!isSurvey ? `
+            <div class="q-explanation-row">
+              <label class="form-label-sm">Study Mode Explanation / Feedback (Shown after answering in Quiz mode)</label>
+              <textarea class="form-textarea form-textarea-sm" placeholder="Explain why the correct answer is right..." 
+                oninput="Builder.updateQuestionProp('${qid}', 'explanation', this.value)">${Utils.escapeHTML(question.explanation || '')}</textarea>
+            </div>
+          ` : ''}
         </div>
 
         <div class="q-card-footer">
           <div class="q-footer-left">
             ${sectionSelectHTML}
-            <div class="q-points-box">
-              <label class="form-label-sm">Points:</label>
-              <input type="number" min="0" max="100" class="form-input form-input-sm points-input" 
-                value="${question.points !== undefined ? question.points : 1}" 
-                oninput="Builder.updateQuestionProp('${qid}', 'points', parseFloat(this.value) || 0)" />
-            </div>
+            ${!isSurvey ? `
+              <div class="q-points-box">
+                <label class="form-label-sm">Points:</label>
+                <input type="number" min="0" max="100" class="form-input form-input-sm points-input" 
+                  value="${question.points !== undefined ? question.points : 1}" 
+                  oninput="Builder.updateQuestionProp('${qid}', 'points', parseFloat(this.value) || 0)" />
+              </div>
+            ` : ''}
             <label class="toggle-label">
               <input type="checkbox" ${question.required ? 'checked' : ''} 
                 onchange="Builder.updateQuestionProp('${qid}', 'required', this.checked)" />
