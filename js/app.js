@@ -144,12 +144,12 @@ class DashboardApp {
             <div class="footer-dropdown-wrap">
               <button class="btn-icon" style="width:32px; height:32px; border-radius:6px; background:var(--bg-surface-subtle);" onclick="App.toggleCardMenu(event, '${f.id}')">⋮</button>
               <div class="card-context-menu" id="menu_${f.id}">
-                <button onclick="App.shareForm('${f.id}')"><span style="vertical-align:-2px;">${icon('share', 14)}</span> Share & QR Code</button>
-                <button onclick="App.duplicateForm('${f.id}')"><span style="vertical-align:-2px;">${icon('form', 14)}</span> Duplicate</button>
-                <button onclick="App.exportJSON('${f.id}')"><span style="vertical-align:-2px;">${icon('download', 14)}</span> Export JSON</button>
-                <button onclick="App.exportCSV('${f.id}')"><span style="vertical-align:-2px;">${icon('chart', 14)}</span> Export Questions CSV</button>
-                <button onclick="App.toggleStatus('${f.id}')"><span style="vertical-align:-2px;">${icon('rotate', 14)}</span> Change Status</button>
-                <button class="text-danger" onclick="App.deleteForm('${f.id}')">Delete</button>
+                <button onclick="App.shareForm('${f.id}')"><span style="color:var(--primary);">${icon('share', 15)}</span> Share & QR Code</button>
+                <button onclick="App.duplicateForm('${f.id}')"><span style="color:#0284c7;">${icon('form', 15)}</span> Duplicate Form</button>
+                <button onclick="App.exportJSON('${f.id}')"><span style="color:#6366f1;">${icon('download', 15)}</span> Export JSON</button>
+                <button onclick="App.exportCSV('${f.id}')"><span style="color:#10b981;">${icon('chart', 15)}</span> Export CSV</button>
+                <button onclick="App.toggleStatus('${f.id}')"><span style="color:#d97706;">${icon('rotate', 15)}</span> Toggle Status</button>
+                <button class="text-danger" onclick="App.deleteForm('${f.id}')"><span style="color:#ef4444;">${icon('trash', 15)}</span> Delete Form</button>
               </div>
             </div>
           </div>
