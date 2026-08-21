@@ -252,12 +252,12 @@ class FormResults {
                           onchange="Results.toggleSelectOne('${r.id}', this.checked)" />
                       </td>
                       <td>
-                        <strong>${Utils.escapeHTML(r.respondentName || 'Candidate')}</strong>
-                        ${r.respondentId ? `<span class="badge" style="font-size:0.7rem; margin-left:4px;">ID: ${Utils.escapeHTML(r.respondentId)}</span>` : ''}
+                        <div style="font-weight:700; color:var(--text-main); font-size:0.95rem;">${Utils.escapeHTML(r.respondentName || 'Candidate')}</div>
+                        ${r.respondentId && r.respondentId !== 'N/A' ? `<span class="badge" style="font-size:0.7rem; margin-top:2px;">ID: ${Utils.escapeHTML(r.respondentId)}</span>` : ''}
                         ${r.respondentEmail && r.respondentEmail !== 'N/A' ? `<div class="sub-email">${Utils.escapeHTML(r.respondentEmail)}</div>` : ''}
                       </td>
-                      <td>${s.score || 0} / ${s.maxScore || 0}</td>
-                      <td><strong>${s.percentage || 0}%</strong></td>
+                      <td><span style="font-weight:700; font-size:0.92rem;">${s.score || 0}</span> <span style="color:var(--text-muted); font-size:0.8rem;">/ ${s.maxScore || 0}</span></td>
+                      <td><strong style="color:${s.percentage >= 60 ? '#16a34a' : '#ea580c'}; font-size:0.95rem;">${s.percentage || 0}%</strong></td>
                       <td><span class="grade-pill grade-${s.grade || 'N'}">${s.grade || 'N/A'}</span></td>
                       <td>
                         ${isGraded ? `
@@ -266,13 +266,15 @@ class FormResults {
                           <span class="status-pill status-draft">PENDING REVIEW ⏳</span>
                         `}
                       </td>
-                      <td>${Utils.formatTime(r.durationSeconds || 0)}</td>
-                      <td>${Utils.formatDate(r.submittedAt)}</td>
+                      <td style="color:var(--text-muted);">${Utils.formatTime(r.durationSeconds || 0)}</td>
+                      <td style="color:var(--text-muted); font-size:0.82rem;">${Utils.formatDate(r.submittedAt)}</td>
                       <td>
-                        <button class="btn btn-sm ${isGraded ? 'btn-outline' : 'btn-primary'}" onclick="Results.inspectResponse('${r.id}')">
-                          ${isGraded ? 'Inspect' : 'Grade / Review ✏️'}
-                        </button>
-                        <button class="btn-icon text-danger" title="Delete Response" onclick="Results.deleteResponse('${r.id}')">✕</button>
+                        <div style="display:flex; align-items:center; gap:0.4rem;">
+                          <button class="btn btn-sm ${isGraded ? 'btn-outline' : 'btn-primary'}" onclick="Results.inspectResponse('${r.id}')" style="font-weight:700;">
+                            ${isGraded ? 'Inspect' : 'Grade / Review ✏️'}
+                          </button>
+                          <button class="btn-icon text-danger" style="width:30px; height:30px; border-radius:6px; background:#fef2f2;" title="Delete Response" onclick="Results.deleteResponse('${r.id}')">✕</button>
+                        </div>
                       </td>
                     </tr>
                   `;
