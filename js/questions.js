@@ -96,7 +96,7 @@ const QuestionsEngine = {
   // ----------------------------------------------------
   // BUILDER CARD RENDERER (Admin Mode)
   // ----------------------------------------------------
-  renderBuilderCard(question, index, total, sections = [], formMode = 'exam') {
+  renderBuilderCard(question, index, total, sections = [], formMode = 'exam', isCollapsed = false) {
     const qid = question.id;
     const type = question.type;
     const isSurvey = formMode === 'survey';
@@ -284,11 +284,14 @@ const QuestionsEngine = {
     }
 
     return `
-      <div class="question-builder-card" id="q_card_${qid}" data-qid="${qid}" draggable="true" ondragstart="Builder.handleDragStart(event, '${qid}')" ondragover="Builder.handleDragOver(event)" ondrop="Builder.handleDrop(event, '${qid}')">
+      <div class="question-builder-card ${isCollapsed ? 'is-collapsed' : ''}" id="q_card_${qid}" data-qid="${qid}" draggable="true" ondragstart="Builder.handleDragStart(event, '${qid}')" ondragover="Builder.handleDragOver(event)" ondrop="Builder.handleDrop(event, '${qid}')">
         <div class="q-card-drag-handle" title="Drag to reorder">⋮⋮</div>
         
         <div class="q-card-header">
           <div class="q-card-title-row">
+            <button type="button" class="btn-toggle-collapse" onclick="Builder.toggleQuestionCollapse('${qid}')" title="${isCollapsed ? 'Expand Question' : 'Collapse Question'}">
+              ${isCollapsed ? icon('chevronDown', 16) : icon('chevronUp', 16)}
+            </button>
             <span class="q-index-badge">Q${index + 1}</span>
             <input type="text" class="form-input q-title-input" value="${Utils.escapeHTML(question.question)}" 
               placeholder="Question Title / Prompt"

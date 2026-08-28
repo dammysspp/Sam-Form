@@ -256,6 +256,80 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Collapsed State for Question Cards */
+.question-builder-card.is-collapsed {
+  padding: 0.85rem 1.25rem;
+  background: #fafbfc;
+  cursor: pointer;
+}
+
+.question-builder-card.is-collapsed:hover {
+  background: #f1f5f9;
+  border-color: var(--primary);
+}
+
+.question-builder-card.is-collapsed .q-card-body,
+.question-builder-card.is-collapsed .q-card-footer,
+.question-builder-card.is-collapsed .q-desc-input {
+  display: none !important;
+}
+
+.question-builder-card.is-collapsed .q-card-header {
+  margin-bottom: 0;
+}
+
+.question-builder-card.is-collapsed .q-card-title-row {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-toggle-collapse {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-toggle-collapse:hover {
+  background: var(--bg-surface-subtle);
+  color: var(--primary);
+}
+
+.section-collapse-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-pill-action {
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-pill-action:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
 .question-builder-card.is-dragging {
   opacity: 0.4;
   border: 2px dashed var(--primary);

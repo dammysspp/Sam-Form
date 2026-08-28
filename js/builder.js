@@ -11,6 +11,47 @@ class FormBuilder {
     this.draggedQId = null;
     this.activeTab = 'questions'; // questions | settings | logic | theme
     this.isDirty = false;
+    this.collapsedQuestions = new Set(); // Stores collapsed question IDs
+  }
+
+  toggleQuestionCollapse(qid) {
+    if (this.collapsedQuestions.has(qid)) {
+      this.collapsedQuestions.delete(qid);
+    } else {
+      this.collapsedQuestions.add(qid);
+    }
+    const cardEl = document.getElementById(`q_card_${qid}`);
+    if (cardEl) {
+      const isCollapsed = this.collapsedQuestions.has(qid);
+      cardEl.classList.toggle('is-collapsed', isCollapsed);
+      const iconBtn = cardEl.querySelector('.btn-toggle-collapse');
+      if (iconBtn) {
+        iconBtn.innerHTML = isCollapsed ? icon('chevronDown', 15) : icon('chevronUp', 15);
+        iconBtn.title = isCollapsed ? 'Expand Question' : 'Collapse Question';
+      }
+    }
+  }
+
+  collapseAllQuestions() {
+    (this.form.questions || []).forEach(q => this.collapsedQuestions.add(q.id));
+    this.renderQuestionsTab();
+    Utils.showToast('All questions collapsed', 'info', 1500);
+  }
+
+  expandAllQuestions() {
+    this.collapsedQuestions.clear();
+    this.renderQuestionsTab();
+    Utils.showToast('All questions expanded', 'info', 1500);
+  }
+
+  collapseSectionQuestions(secId) {
+    (this.form.questions || []).filter(q => q.sectionId === secId).forEach(q => this.collapsedQuestions.add(q.id));
+    this.renderQuestionsTab();
+  }
+
+  expandSectionQuestions(secId) {
+    (this.form.questions || []).filter(q => q.sectionId === secId).forEach(q => this.collapsedQuestions.delete(q.id));
+    this.renderQuestionsTab();
   }
 
   async init() {
@@ -216,6 +257,23 @@ class FormBuilder {
           placeholder="Form Title" oninput="Builder.updateFormTitle(this.value)" />
         <textarea class="form-desc-input" placeholder="Form Description / Instructions" 
           oninput="Builder.updateFormDesc(this.value)">${Utils.escapeHTML(this.form.description || '')}</textarea>
+        
+        <!-- Global Quick Actions Bar -->
+        ${(this.form.questions || []).length > 1 ? `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem; pt:0.75rem; border-top:1px solid var(--border-color); padding-top:0.75rem;">
+            <div style="font-size:0.84rem; font-weight:700; color:var(--text-muted);">
+              ${(this.form.questions || []).length} Total Questions
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+              <button type="button" class="btn-pill-action" onclick="Builder.collapseAllQuestions()">
+                ${icon('collapse', 13)} Collapse All
+              </button>
+              <button type="button" class="btn-pill-action" onclick="Builder.expandAllQuestions()">
+                ${icon('expand', 13)} Expand All
+              </button>
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
 
@@ -229,7 +287,15 @@ class FormBuilder {
           <div class="section-header-card">
             <div class="section-header-top">
               <span class="section-badge">Section ${secIdx + 1} of ${sections.length}</span>
-              <div class="section-actions">
+              <div class="section-actions" style="display:flex; align-items:center; gap:0.5rem;">
+                ${secQuestions.length > 1 ? `
+                  <button type="button" class="btn-pill-action" onclick="Builder.collapseSectionQuestions('${sec.id}')" title="Collapse questions in this section">
+                    ${icon('collapse', 12)} Collapse
+                  </button>
+                  <button type="button" class="btn-pill-action" onclick="Builder.expandSectionQuestions('${sec.id}')" title="Expand questions in this section">
+                    ${icon('expand', 12)} Expand
+                  </button>
+                ` : ''}
                 ${sections.length > 1 ? `
                   <button type="button" class="btn-icon text-danger" title="Delete Section" onclick="Builder.deleteSection('${sec.id}')">✕</button>
                 ` : ''}
@@ -242,7 +308,7 @@ class FormBuilder {
           </div>
 
           <div class="questions-list" id="q_list_${sec.id}">
-            ${secQuestions.map((q, idx) => QuestionsEngine.renderBuilderCard(q, idx, secQuestions.length, sections, this.form.mode)).join('')}
+            ${secQuestions.map((q, idx) => QuestionsEngine.renderBuilderCard(q, idx, secQuestions.length, sections, this.form.mode, this.collapsedQuestions.has(q.id))).join('')}
           </div>
 
           <div class="section-add-q-bar">
