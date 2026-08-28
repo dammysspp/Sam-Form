@@ -1,4 +1,4 @@
-const CACHE_NAME = 'formforge-v1';
+const CACHE_NAME = 'formforge-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,9 @@ const ASSETS = [
   './css/responder.css',
   './css/results.css',
   './css/responsive.css',
+  './js/icons.js',
   './js/storage.js',
+  './js/supabase.js',
   './js/utils.js',
   './js/questions.js',
   './js/importer.js',
@@ -29,7 +31,7 @@ const ASSETS = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS).catch((err) => console.log('Cache pre-fetch warning:', err));
+      return cache.addAll(ASSETS).catch((err) => console.log('Cache pre-fetch notice:', err));
     })
   );
   self.skipWaiting();
@@ -49,22 +51,47 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Stale-while-revalidate for local assets, network fallback
+  // Only handle GET requests
   if (e.request.method !== 'GET') return;
+
+  const url = new URL(e.request.url);
+
+  // NEVER intercept Supabase, Render, EmailJS, Telegram, or external APIs
+  if (
+    url.origin !== self.location.origin ||
+    url.hostname.includes('supabase.co') ||
+    url.hostname.includes('render.com') ||
+    url.hostname.includes('emailjs.com') ||
+    url.hostname.includes('api.telegram.org') ||
+    url.hostname.includes('qrserver.com')
+  ) {
+    return;
+  }
+
+  // Same-origin static asset caching strategy: Cache-first with Network Fallback
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
-      const fetchPromise = fetch(e.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(e.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
-      return cachedResponse || fetchPromise;
+      if (cachedResponse) {
+        // Fetch fresh copy in background to revalidate cache
+        fetch(e.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+              caches.open(CACHE_NAME).then((cache) => cache.put(e.request, networkResponse));
+            }
+          })
+          .catch(() => {});
+        return cachedResponse;
+      }
+
+      return fetch(e.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      });
     })
   );
 });
