@@ -987,12 +987,6 @@ class FormResponder {
               </button>
               <div id="post_contact_msg" style="margin-top:0.6rem; font-size:0.85rem;"></div>
             </div>
-
-            <div class="results-actions" style="margin-top: 1.5rem;">
-              <a href="index.html" class="btn btn-secondary">
-                <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Home
-              </a>
-            </div>
           </div>
         </div>
       `;
@@ -1185,12 +1179,7 @@ class FormResponder {
               ${icon('cross', 36)}
             </div>
             <h2>Assessment Unavailable</h2>
-            <p>${Utils.escapeHTML(msg)}</p>
-            <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
-              <a href="index.html" class="btn btn-primary">
-                <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Dashboard
-              </a>
-            </div>
+            <p style="margin-bottom:0;">${Utils.escapeHTML(msg)}</p>
           </div>
         </div>
       `;
@@ -1207,12 +1196,7 @@ class FormResponder {
               ${icon('lock', 36)}
             </div>
             <h2>Access Restricted</h2>
-            <p>${Utils.escapeHTML(msg)}</p>
-            <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
-              <a href="index.html" class="btn btn-primary">
-                <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Home
-              </a>
-            </div>
+            <p style="margin-bottom:0;">${Utils.escapeHTML(msg)}</p>
           </div>
         </div>
       `;
