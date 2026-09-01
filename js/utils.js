@@ -19,6 +19,87 @@ const Utils = {
     return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 5)}`;
   },
 
+  // --- HARDWARE & DEVICE FINGERPRINTING (Zero external dependencies) ---
+  async getDeviceFingerprint() {
+    try {
+      const parts = [
+        navigator.userAgent || '',
+        navigator.language || '',
+        screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
+        new Date().getTimezoneOffset(),
+        navigator.hardwareConcurrency || 1,
+        navigator.deviceMemory || 1,
+        navigator.platform || '',
+        (navigator.languages || []).join(',')
+      ];
+
+      // Canvas 2D graphic rendering hash
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 50;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.textBaseline = 'top';
+          ctx.font = "14px 'Arial'";
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillStyle = '#f60';
+          ctx.fillRect(125, 1, 62, 20);
+          ctx.fillStyle = '#069';
+          ctx.fillText('SamForm, AntiRetake 🔒', 2, 15);
+          ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+          ctx.fillText('SamForm, AntiRetake 🔒', 4, 17);
+          parts.push(canvas.toDataURL());
+        }
+      } catch (e) {}
+
+      const raw = parts.join('###');
+      // Simple resilient 32-bit FNV-1a string hash to hex
+      let hash = 2166136261;
+      for (let i = 0; i < raw.length; i++) {
+        hash ^= raw.charCodeAt(i);
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+      }
+      const hex = (hash >>> 0).toString(16).padStart(8, '0');
+      return `dev_${hex}`;
+    } catch (err) {
+      return `dev_${Math.random().toString(36).substr(2, 8)}`;
+    }
+  },
+
+  // Fetch Public Client IP Address with quick timeout & multiple fallbacks
+  async getClientIP() {
+    // 1. Check local session cache first to speed up
+    const cachedIP = sessionStorage.getItem('samform_cached_client_ip');
+    if (cachedIP) return cachedIP;
+
+    const fetchWithTimeout = (url, ms = 2500) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), ms);
+      return fetch(url, { signal: controller.signal })
+        .then(r => r.json())
+        .finally(() => clearTimeout(timeoutId));
+    };
+
+    try {
+      const data = await fetchWithTimeout('https://api.ipify.org?format=json', 2500);
+      if (data && data.ip) {
+        sessionStorage.setItem('samform_cached_client_ip', data.ip);
+        return data.ip;
+      }
+    } catch (e) {}
+
+    try {
+      const data = await fetchWithTimeout('https://ipapi.co/json/', 2500);
+      if (data && data.ip) {
+        sessionStorage.setItem('samform_cached_client_ip', data.ip);
+        return data.ip;
+      }
+    } catch (e) {}
+
+    return 'N/A';
+  },
+
   // Debounce utility
   debounce(func, wait = 300) {
     let timeout;

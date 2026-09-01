@@ -127,7 +127,37 @@ class FormResponder {
           return;
         }
       }
+
+      // Check anti-retake restriction (Block multiple attempts by device or IP)
+      if (this.form.settings?.preventMultipleSubmissions) {
+        this.deviceFingerprint = await Utils.getDeviceFingerprint();
+        this.clientIP = await Utils.getClientIP();
+
+        // 1. Check local persistent storage
+        const hasLocalSubmission = localStorage.getItem(`samform_completed_${this.form.id}`);
+        if (hasLocalSubmission) {
+          this.renderClosed('You have already completed this assessment. Multiple submissions from this device are not allowed.');
+          return;
+        }
+
+        // 2. Check cloud responses database for matching device fingerprint or IP
+        const existingResponses = await DB.getResponsesByFormId(this.form.id);
+        const match = existingResponses.find(r => {
+          const rDev = r.deviceFingerprint || r.answers?._metadata?.deviceFingerprint;
+          const rIp = r.clientIP || r.answers?._metadata?.clientIP;
+          return (rDev && rDev === this.deviceFingerprint) || (rIp && rIp !== 'N/A' && rIp === this.clientIP);
+        });
+
+        if (match) {
+          this.renderClosed(`You have already completed this assessment on ${Utils.formatDate(match.submittedAt)}. Re-taking the assessment is prohibited by the examiner.`);
+          return;
+        }
+      }
     }
+
+    // Capture device fingerprint and IP in background
+    Utils.getDeviceFingerprint().then(f => this.deviceFingerprint = f);
+    Utils.getClientIP().then(ip => this.clientIP = ip);
 
     // Setup Theme
     document.body.className = `theme-${this.form.theme || 'indigo'} responder-mode`;
@@ -858,6 +888,9 @@ class FormResponder {
     // Calculate score
     const scoreResult = ScoringEngine.calculateTotalResults(this.form, this.answers);
 
+    const devFp = this.deviceFingerprint || await Utils.getDeviceFingerprint();
+    const ip = this.clientIP || await Utils.getClientIP();
+
     const responseRecord = {
       id: Utils.uid('resp'),
       formId: this.form.id,
@@ -867,6 +900,8 @@ class FormResponder {
       respondentPhone: this.respondentPhone || 'N/A',
       respondentTelegram: this.respondentTelegram || 'N/A',
       respondentId: this.respondentId || 'N/A',
+      deviceFingerprint: devFp,
+      clientIP: ip,
       answers: this.answers,
       flags: Array.from(this.flags),
       durationSeconds,
@@ -878,6 +913,9 @@ class FormResponder {
     if (!this.isPreview) {
       await DB.saveResponse(responseRecord);
       await DB.clearDraft(this.form.id);
+      try {
+        localStorage.setItem(`samform_completed_${this.form.id}`, new Date().toISOString());
+      } catch (e) {}
     }
 
     this.renderResultsScreen(responseRecord, scoreResult);

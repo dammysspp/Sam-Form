@@ -152,11 +152,13 @@ const FormForgeSupabase = {
   async submitResponseToCloud(resp) {
     if (!this.isReady()) return null;
     try {
-      // Store custom phone and telegram safely inside answers._metadata so Supabase doesn't reject missing columns
+      // Store custom phone, telegram, deviceFingerprint, and clientIP safely inside answers._metadata so Supabase doesn't reject missing columns
       const answersObj = { ...(resp.answers || {}) };
       answersObj._metadata = {
         phone: resp.respondentPhone || 'N/A',
-        telegram: resp.respondentTelegram || 'N/A'
+        telegram: resp.respondentTelegram || 'N/A',
+        deviceFingerprint: resp.deviceFingerprint || 'N/A',
+        clientIP: resp.clientIP || 'N/A'
       };
 
       const payload = {
@@ -205,6 +207,8 @@ const FormForgeSupabase = {
             respondentPhone: d.respondent_phone || meta.phone || 'N/A',
             respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
             respondentId: d.respondent_id,
+            deviceFingerprint: d.device_fingerprint || meta.deviceFingerprint || 'N/A',
+            clientIP: d.client_ip || meta.clientIP || 'N/A',
             answers: answersObj,
             flags: d.flags || [],
             manualGrades: d.manual_grades || {},
@@ -241,6 +245,8 @@ const FormForgeSupabase = {
             respondentPhone: d.respondent_phone || meta.phone || 'N/A',
             respondentTelegram: d.respondent_telegram || meta.telegram || 'N/A',
             respondentId: d.respondent_id,
+            deviceFingerprint: d.device_fingerprint || meta.deviceFingerprint || 'N/A',
+            clientIP: d.client_ip || meta.clientIP || 'N/A',
             answers: answersObj,
             flags: d.flags || [],
             manualGrades: d.manual_grades || {},

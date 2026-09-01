@@ -234,7 +234,28 @@ class FormForgeStorage {
     // Fetch live from Supabase if connected
     if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
       const cloudResp = await FormForgeSupabase.fetchResponsesForFormFromCloud(formId);
-      return cloudResp || [];
+      if (cloudResp) {
+        // Sync local IndexedDB cache with clean cloud state
+        try {
+          if (this.db) {
+            const tx = this.db.transaction('responses', 'readwrite');
+            const store = tx.objectStore('responses');
+            const index = store.index('formId');
+            const req = index.getAll(IDBKeyRange.only(formId));
+            req.onsuccess = () => {
+              const localRows = req.result || [];
+              const cloudIds = new Set(cloudResp.map(r => r.id));
+              // Remove any deleted rows from local storage
+              localRows.forEach(localR => {
+                if (!cloudIds.has(localR.id)) store.delete(localR.id);
+              });
+              // Put clean cloud rows
+              cloudResp.forEach(r => store.put(r));
+            };
+          }
+        } catch (e) {}
+        return cloudResp;
+      }
     }
 
     return new Promise((resolve, reject) => {
@@ -253,7 +274,21 @@ class FormForgeStorage {
 
     if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
       const cloudAll = await FormForgeSupabase.fetchAllResponsesFromCloud();
-      if (cloudAll && cloudAll.length > 0) {
+      if (cloudAll) {
+        try {
+          if (this.db) {
+            const tx = this.db.transaction('responses', 'readwrite');
+            const store = tx.objectStore('responses');
+            const cloudIds = new Set(cloudAll.map(r => r.id));
+            const req = store.getAll();
+            req.onsuccess = () => {
+              (req.result || []).forEach(localR => {
+                if (!cloudIds.has(localR.id)) store.delete(localR.id);
+              });
+              cloudAll.forEach(r => store.put(r));
+            };
+          }
+        } catch (e) {}
         return cloudAll;
       }
     }
@@ -271,11 +306,12 @@ class FormForgeStorage {
   async deleteResponse(responseId) {
     await this.isReady;
 
-    // Delete from Supabase Cloud if connected
+    // 1. Delete from Supabase Cloud
     if (window.FormForgeSupabase && FormForgeSupabase.isReady()) {
       await FormForgeSupabase.deleteResponseFromCloud(responseId);
     }
 
+    // 2. Delete from local IndexedDB
     return new Promise((resolve, reject) => {
       if (!this.db) { resolve(true); return; }
       const tx = this.db.transaction('responses', 'readwrite');

@@ -385,18 +385,28 @@ class FormBuilder {
         </div>
 
         <div class="setting-group">
-          <label class="setting-title">Randomization & Anti-Cheat</label>
-          <div class="grid-2-col">
+          <label class="setting-title">Randomization & Anti-Cheat Protection</label>
+          <div class="grid-2-col" style="margin-bottom:0.75rem;">
             <label class="toggle-label">
               <input type="checkbox" ${s.randomizeQuestions ? 'checked' : ''} 
                 onchange="Builder.updateSetting('randomizeQuestions', this.checked)" />
-              <span>Randomize Question Order per Respondent</span>
+              <span>Randomize Question Order</span>
             </label>
             <label class="toggle-label">
               <input type="checkbox" ${s.randomizeOptions ? 'checked' : ''} 
                 onchange="Builder.updateSetting('randomizeOptions', this.checked)" />
               <span>Randomize Multiple Choice Choices</span>
             </label>
+          </div>
+          <div class="toggle-row" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:0.75rem 1rem; border-radius:var(--radius-sm);">
+            <label class="toggle-label" style="font-weight:700; color:#166534;">
+              <input type="checkbox" ${s.preventMultipleSubmissions ? 'checked' : ''} 
+                onchange="Builder.updateSetting('preventMultipleSubmissions', this.checked)" />
+              <span>🔒 Prevent Multiple Submissions / Retakes (Device & IP Tracking)</span>
+            </label>
+            <p class="text-muted" style="font-size:0.8rem; margin:0.25rem 0 0 1.75rem; color:#15803d;">
+              Identifies candidates by unique hardware fingerprint & IP. Blocks them from taking the assessment again even if they change their name or email.
+            </p>
           </div>
         </div>
 

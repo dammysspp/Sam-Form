@@ -252,9 +252,27 @@ class FormResults {
                           onchange="Results.toggleSelectOne('${r.id}', this.checked)" />
                       </td>
                       <td>
-                        <div style="font-weight:700; color:var(--text-main); font-size:0.95rem;">${Utils.escapeHTML(r.respondentName || 'Candidate')}</div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                          <span style="font-weight:700; color:var(--text-main); font-size:0.95rem;">${Utils.escapeHTML(r.respondentName || 'Candidate')}</span>
+                          ${(() => {
+                            // Check if another response shares same deviceFingerprint or IP
+                            const dev = r.deviceFingerprint || r.answers?._metadata?.deviceFingerprint;
+                            const ip = r.clientIP || r.answers?._metadata?.clientIP;
+                            const isDuplicate = this.responses.filter(other => other.id !== r.id && (
+                              (dev && dev !== 'N/A' && (other.deviceFingerprint === dev || other.answers?._metadata?.deviceFingerprint === dev)) ||
+                              (ip && ip !== 'N/A' && (other.clientIP === ip || other.answers?._metadata?.clientIP === ip))
+                            )).length > 0;
+
+                            return isDuplicate ? `
+                              <span class="badge" style="background:#fee2e2; color:#991b1b; font-size:0.68rem; font-weight:700; border:1px solid #fca5a5;" title="Duplicate / Multiple attempts detected from same device or IP">
+                                ⚠ MULTIPLE ATTEMPT
+                              </span>
+                            ` : '';
+                          })()}
+                        </div>
                         ${r.respondentId && r.respondentId !== 'N/A' ? `<span class="badge" style="font-size:0.7rem; margin-top:2px;">ID: ${Utils.escapeHTML(r.respondentId)}</span>` : ''}
                         ${r.respondentEmail && r.respondentEmail !== 'N/A' ? `<div class="sub-email">${Utils.escapeHTML(r.respondentEmail)}</div>` : ''}
+                        ${r.clientIP && r.clientIP !== 'N/A' ? `<div style="font-size:0.72rem; color:#94a3b8;">IP: ${Utils.escapeHTML(r.clientIP)}</div>` : ''}
                       </td>
                       <td><span style="font-weight:700; font-size:0.92rem;">${s.score || 0}</span> <span style="color:var(--text-muted); font-size:0.8rem;">/ ${s.maxScore || 0}</span></td>
                       <td><strong style="color:${s.percentage >= 60 ? '#16a34a' : '#ea580c'}; font-size:0.95rem;">${s.percentage || 0}%</strong></td>
@@ -421,6 +439,22 @@ class FormResults {
     this.render();
   }
 
+  async deleteResponse(responseId) {
+    const target = this.responses.find(r => r.id === responseId);
+    const name = target?.respondentName || 'Candidate';
+    if (!confirm(`Are you sure you want to permanently delete the response for "${name}"?`)) return;
+
+    // Optimistic UI removal
+    this.responses = this.responses.filter(r => r.id !== responseId);
+    this.selectedResponseIds.delete(responseId);
+    this.filterAndSort();
+    this.render();
+
+    // Background persistence
+    await DB.deleteResponse(responseId);
+    Utils.showToast(`Deleted response for "${name}"`, 'success');
+  }
+
   async bulkDeleteSelected() {
     const count = this.selectedResponseIds.size;
     if (count === 0) return;
@@ -428,13 +462,16 @@ class FormResults {
     if (!confirm(`Are you sure you want to permanently delete all ${count} selected response(s)?`)) return;
 
     const ids = Array.from(this.selectedResponseIds);
+    // Optimistic UI removal
+    this.responses = this.responses.filter(r => !this.selectedResponseIds.has(r.id));
+    this.selectedResponseIds.clear();
+    this.filterAndSort();
+    this.render();
+
     for (const id of ids) {
       await DB.deleteResponse(id);
     }
 
-    this.selectedResponseIds.clear();
-    await this.reloadResponses();
-    this.render();
     Utils.showToast(`Deleted ${count} responses successfully!`, 'success');
   }
 
