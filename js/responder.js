@@ -1179,10 +1179,19 @@ class FormResponder {
     const root = document.getElementById('responder-app');
     if (root) {
       root.innerHTML = `
-        <div class="empty-state-card">
-          <h2>Assessment Unavailable</h2>
-          <p>${Utils.escapeHTML(msg)}</p>
-          <a href="index.html" class="btn btn-primary">Go to Dashboard</a>
+        <div class="assessment-intro-container" style="display:flex; justify-content:center; align-items:center; min-height:85vh; padding:1.5rem;">
+          <div class="empty-state-card card-danger">
+            <div class="state-card-icon-wrap icon-danger">
+              ${icon('cross', 36)}
+            </div>
+            <h2>Assessment Unavailable</h2>
+            <p>${Utils.escapeHTML(msg)}</p>
+            <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+              <a href="index.html" class="btn btn-primary">
+                <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Dashboard
+              </a>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -1192,10 +1201,19 @@ class FormResponder {
     const root = document.getElementById('responder-app');
     if (root) {
       root.innerHTML = `
-        <div class="empty-state-card">
-          <h2>Form Closed</h2>
-          <p>${Utils.escapeHTML(msg)}</p>
-          <a href="index.html" class="btn btn-primary">Return to Home</a>
+        <div class="assessment-intro-container" style="display:flex; justify-content:center; align-items:center; min-height:85vh; padding:1.5rem;">
+          <div class="empty-state-card card-warning">
+            <div class="state-card-icon-wrap icon-warning">
+              ${icon('lock', 36)}
+            </div>
+            <h2>Access Restricted</h2>
+            <p>${Utils.escapeHTML(msg)}</p>
+            <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+              <a href="index.html" class="btn btn-primary">
+                <span style="vertical-align:-2px;">${icon('home', 15)}</span> Return to Home
+              </a>
+            </div>
+          </div>
         </div>
       `;
     }
