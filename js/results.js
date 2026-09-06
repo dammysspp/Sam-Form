@@ -531,6 +531,14 @@ class FormResults {
     this.filteredResponses = list;
   }
 
+  closeInspector() {
+    document.body.classList.remove('review-modal-open');
+    const prompt = document.getElementById('landscape_rotate_prompt');
+    if (prompt) prompt.remove();
+    const modals = document.querySelectorAll('[id^="inspect_modal_"]');
+    modals.forEach(m => m.remove());
+  }
+
   // --- INSPECTION & MANUAL GRADING MODAL ---
   inspectResponse(responseId) {
     const resp = this.responses.find(r => r.id === responseId);
@@ -543,25 +551,9 @@ class FormResults {
 
     document.body.classList.add('review-modal-open');
 
-    // Remove any existing rotate prompt
-    const existingPrompt = document.getElementById('landscape_rotate_prompt');
-    if (existingPrompt) existingPrompt.remove();
-
-    // Landscape Enforcement Banner for mobile devices in portrait
-    const rotateOverlay = document.createElement('div');
-    rotateOverlay.className = 'landscape-rotate-prompt';
-    rotateOverlay.id = 'landscape_rotate_prompt';
-    rotateOverlay.innerHTML = `
-      <div class="rotate-phone-icon" style="color:var(--primary); margin-bottom:1rem;">${icon('rotate', 48)}</div>
-      <div class="rotate-prompt-title">Rotate Device to Landscape</div>
-      <p class="rotate-prompt-desc">
-        To review responses, grade written answers, and view detailed statistics, please turn your phone horizontally.
-      </p>
-      <button type="button" class="btn-bypass-landscape" onclick="Results.closeInspector()">
-        Close & Return to Table
-      </button>
-    `;
-    document.body.appendChild(rotateOverlay);
+    // Remove any existing modals
+    this.closeInspector();
+    document.body.classList.add('review-modal-open');
 
     const modal = document.createElement('div');
     modal.className = 'modal-backdrop';
