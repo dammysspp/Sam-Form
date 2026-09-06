@@ -8,6 +8,7 @@ class FormResults {
     this.responses = [];
     this.filteredResponses = [];
     this.selectedResponseIds = new Set();
+    this.collapsedReviewQuestions = new Set(); // Track collapsed questions during review
     this.searchTerm = '';
     this.filterStatus = 'all'; // all | graded | pending
     this.sortField = 'submittedAt';
@@ -653,86 +654,96 @@ class FormResults {
               const qManual = manualGrades[q.id] || {};
               const maxPts = q.points || 1;
               const hasEarned = evalData.earnedPoints !== undefined ? evalData.earnedPoints : (qManual.earnedPoints || 0);
+              const isCollapsed = this.collapsedReviewQuestions.has(q.id);
 
               return `
-                <div class="inspect-q-item ${evalData.needsManualReview ? 'inspect-pending-review' : evalData.isCorrect ? 'inspect-correct' : 'inspect-incorrect'}">
-                  <div class="inspect-q-title-row">
-                    <span><strong>Q${idx + 1}.</strong> ${Utils.escapeHTML(q.question)}</span>
-                    <span class="badge ${evalData.isCorrect ? 'badge-correct' : 'badge-incorrect'}" style="flex-shrink:0;">
-                      ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '(Review Required)' : ''}
+                <div class="inspect-q-item ${evalData.needsManualReview ? 'inspect-pending-review' : evalData.isCorrect ? 'inspect-correct' : 'inspect-incorrect'}" id="review_q_card_${q.id}">
+                  <div class="inspect-q-title-row" style="cursor:pointer;" onclick="Results.toggleReviewQuestionCollapse('${q.id}')">
+                    <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:0;">
+                      <span class="btn-toggle-collapse" style="font-size:0.85rem; padding:2px 6px; border-radius:4px; background:#f1f5f9; color:var(--text-muted);">
+                        ${isCollapsed ? '▼ Expand' : '▲ Collapse'}
+                      </span>
+                      <span style="white-space:${isCollapsed ? 'nowrap' : 'normal'}; overflow:${isCollapsed ? 'hidden' : 'visible'}; text-overflow:${isCollapsed ? 'ellipsis' : 'clip'};">
+                        <strong>Q${idx + 1}.</strong> ${Utils.escapeHTML(q.question)}
+                      </span>
+                    </div>
+                    <span class="badge ${evalData.isCorrect ? 'badge-correct' : 'badge-incorrect'}" style="flex-shrink:0; margin-left:0.5rem;">
+                      ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '(Needs Review)' : '✓'}
                     </span>
                   </div>
 
-                  <div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:0.25rem;">Candidate's Answer:</div>
-                  <div class="user-ans-box">${Utils.escapeHTML(Array.isArray(userAns) ? userAns.join(', ') : (userAns !== undefined && userAns !== null && userAns !== '' ? (typeof userAns === 'object' ? JSON.stringify(userAns) : String(userAns)) : '<No Answer Provided>'))}</div>
+                  <div class="review-q-body" id="review_q_body_${q.id}" style="${isCollapsed ? 'display:none;' : 'display:block;'}">
+                    <div style="font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:0.25rem;">Candidate's Answer:</div>
+                    <div class="user-ans-box">${Utils.escapeHTML(Array.isArray(userAns) ? userAns.join(', ') : (userAns !== undefined && userAns !== null && userAns !== '' ? (typeof userAns === 'object' ? JSON.stringify(userAns) : String(userAns)) : '<No Answer Provided>'))}</div>
 
-                  ${q.answer ? `
-                    <div class="inspect-q-correct text-success">
-                      <strong>Sample / Model Answer:</strong> ${Utils.escapeHTML(Array.isArray(q.answer) ? q.answer.join(', ') : String(q.answer))}
-                    </div>
-                  ` : ''}
-
-                  <!-- Modern Intuitive Examiner Grading Studio -->
-                  <div class="manual-grading-panel" style="background:#ffffff; border:1.5px solid ${evalData.needsManualReview ? '#fde68a' : '#e2e8f0'}; border-radius:var(--radius-md); padding:1rem; margin-top:1rem; box-shadow:var(--shadow-xs);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.6rem;">
-                      <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; color:var(--text-main); font-size:0.9rem;">
-                        <span style="color:var(--primary); font-size:1.1rem;">⚡</span>
-                        <span>Assign Marks & Feedback</span>
+                    ${q.answer ? `
+                      <div class="inspect-q-correct text-success">
+                        <strong>Sample / Model Answer:</strong> ${Utils.escapeHTML(Array.isArray(q.answer) ? q.answer.join(', ') : String(q.answer))}
                       </div>
-                      ${qManual.gradedAt ? `
-                        <span class="badge" style="background:#ecfdf5; color:#047857; font-weight:700; font-size:0.75rem; border:1px solid #a7f3d0;">
-                          ✓ Graded on ${Utils.formatDate(qManual.gradedAt)}
-                        </span>
-                      ` : `
-                        <span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700; font-size:0.75rem; border:1px solid #fde68a;">
-                          ⏳ Needs Evaluation
-                        </span>
-                      `}
-                    </div>
+                    ` : ''}
 
-                    <!-- 1-Tap Quick Mark Action Bar -->
-                    <div style="margin-bottom:0.85rem;">
-                      <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.4rem;">
-                        1-Tap Instant Grading:
-                      </label>
-                      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:0.5rem;">
-                        <button type="button" class="btn btn-sm ${qManual.earnedPoints === maxPts ? 'btn-success' : 'btn-outline'}" 
-                          style="${qManual.earnedPoints === maxPts ? 'background:#10b981; color:#fff; border-color:#059669; font-weight:800;' : 'color:#059669; border-color:#10b981;'}"
-                          onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Full Marks')">
-                          ✓ Full (${maxPts} pts)
-                        </button>
-                        ${maxPts > 1 ? `
-                          <button type="button" class="btn btn-sm ${qManual.earnedPoints === (maxPts / 2) ? 'btn-primary' : 'btn-outline'}" 
-                            style="${qManual.earnedPoints === (maxPts / 2) ? 'background:var(--primary); color:#fff; font-weight:800;' : 'color:var(--primary); border-color:var(--primary);'}"
-                            onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Half Credit')">
-                            ½ Half (${maxPts / 2} pts)
+                    <!-- Modern Intuitive Examiner Grading Studio -->
+                    <div class="manual-grading-panel" style="background:#ffffff; border:1.5px solid ${evalData.needsManualReview ? '#fde68a' : '#e2e8f0'}; border-radius:var(--radius-md); padding:1rem; margin-top:1rem; box-shadow:var(--shadow-xs);">
+                      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.6rem;">
+                        <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; color:var(--text-main); font-size:0.9rem;">
+                          <span style="color:var(--primary); font-size:1.1rem;">⚡</span>
+                          <span>Assign Marks & Feedback</span>
+                        </div>
+                        ${qManual.gradedAt ? `
+                          <span class="badge" style="background:#ecfdf5; color:#047857; font-weight:700; font-size:0.75rem; border:1px solid #a7f3d0;">
+                            ✓ Graded on ${Utils.formatDate(qManual.gradedAt)}
+                          </span>
+                        ` : `
+                          <span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700; font-size:0.75rem; border:1px solid #fde68a;">
+                            ⏳ Needs Evaluation
+                          </span>
+                        `}
+                      </div>
+
+                      <!-- 1-Tap Quick Mark Action Bar (Auto-Collapses on Click) -->
+                      <div style="margin-bottom:0.85rem;">
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.4rem;">
+                          1-Tap Instant Grading (Auto-Collapses to next):
+                        </label>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:0.5rem;">
+                          <button type="button" class="btn btn-sm ${qManual.earnedPoints === maxPts ? 'btn-success' : 'btn-outline'}" 
+                            style="${qManual.earnedPoints === maxPts ? 'background:#10b981; color:#fff; border-color:#059669; font-weight:800;' : 'color:#059669; border-color:#10b981;'}"
+                            onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Full Marks')">
+                            ✓ Full (${maxPts} pts)
                           </button>
-                        ` : ''}
-                        <button type="button" class="btn btn-sm ${qManual.gradedAt && qManual.earnedPoints === 0 ? 'btn-danger' : 'btn-outline'}" 
-                          style="${qManual.gradedAt && qManual.earnedPoints === 0 ? 'background:#ef4444; color:#fff; border-color:#dc2626; font-weight:800;' : 'color:#dc2626; border-color:#ef4444;'}"
-                          onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Zero Marks / Incorrect')">
-                          ✕ Zero (0 pts)
-                        </button>
+                          ${maxPts > 1 ? `
+                            <button type="button" class="btn btn-sm ${qManual.earnedPoints === (maxPts / 2) ? 'btn-primary' : 'btn-outline'}" 
+                              style="${qManual.earnedPoints === (maxPts / 2) ? 'background:var(--primary); color:#fff; font-weight:800;' : 'color:var(--primary); border-color:var(--primary);'}"
+                              onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Half Credit')">
+                              ½ Half (${maxPts / 2} pts)
+                            </button>
+                          ` : ''}
+                          <button type="button" class="btn btn-sm ${qManual.gradedAt && qManual.earnedPoints === 0 ? 'btn-danger' : 'btn-outline'}" 
+                            style="${qManual.gradedAt && qManual.earnedPoints === 0 ? 'background:#ef4444; color:#fff; border-color:#dc2626; font-weight:800;' : 'color:#dc2626; border-color:#ef4444;'}"
+                            onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Zero Marks / Incorrect')">
+                            ✕ Zero (0 pts)
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    <!-- Custom Marks & Feedback Row -->
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem; display:flex; flex-direction:column; gap:0.6rem;">
-                      <div style="display:flex; gap:0.6rem; align-items:flex-end; flex-wrap:wrap;">
-                        <div style="width:130px; flex-shrink:0;">
-                          <label class="form-label-sm" style="font-size:0.75rem; font-weight:700;">Award Marks (0 - ${maxPts}):</label>
-                          <input type="number" min="0" max="${maxPts}" step="0.25" id="manual_pts_${q.id}" class="form-input form-input-sm" 
-                            value="${qManual.earnedPoints !== undefined ? qManual.earnedPoints : (evalData.earnedPoints || 0)}" style="font-weight:700; font-size:0.95rem; text-align:center;" />
+                      <!-- Custom Marks & Feedback Row -->
+                      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem; display:flex; flex-direction:column; gap:0.6rem;">
+                        <div style="display:flex; gap:0.6rem; align-items:flex-end; flex-wrap:wrap;">
+                          <div style="width:130px; flex-shrink:0;">
+                            <label class="form-label-sm" style="font-size:0.75rem; font-weight:700;">Award Marks (0 - ${maxPts}):</label>
+                            <input type="number" min="0" max="${maxPts}" step="0.25" id="manual_pts_${q.id}" class="form-input form-input-sm" 
+                              value="${qManual.earnedPoints !== undefined ? qManual.earnedPoints : (evalData.earnedPoints || 0)}" style="font-weight:700; font-size:0.95rem; text-align:center;" />
+                          </div>
+                          <div style="flex:1; min-width:180px;">
+                            <label class="form-label-sm" style="font-size:0.75rem; font-weight:700;">Examiner Feedback / Note (Optional):</label>
+                            <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" 
+                              placeholder="e.g. Well reasoned, correct reference..." value="${Utils.escapeHTML(qManual.comment || '')}" />
+                          </div>
+                          <button type="button" class="btn btn-sm btn-primary" style="font-weight:700; padding:0.45rem 1rem; flex-shrink:0;" 
+                            onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">
+                            💾 Save & Collapse
+                          </button>
                         </div>
-                        <div style="flex:1; min-width:180px;">
-                          <label class="form-label-sm" style="font-size:0.75rem; font-weight:700;">Examiner Feedback / Note (Optional):</label>
-                          <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" 
-                            placeholder="e.g. Well reasoned, correct reference..." value="${Utils.escapeHTML(qManual.comment || '')}" />
-                        </div>
-                        <button type="button" class="btn btn-sm btn-primary" style="font-weight:700; padding:0.45rem 1rem; flex-shrink:0;" 
-                          onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">
-                          💾 Save Mark
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -767,10 +778,20 @@ class FormResults {
     document.querySelectorAll('.modal-backdrop').forEach(m => m.remove());
   }
 
-  toggleRemarkMode(responseId, qid) {
-    const box = document.getElementById(`remark_box_${qid}`);
-    if (box) {
-      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  toggleReviewQuestionCollapse(qid) {
+    if (this.collapsedReviewQuestions.has(qid)) {
+      this.collapsedReviewQuestions.delete(qid);
+    } else {
+      this.collapsedReviewQuestions.add(qid);
+    }
+    const body = document.getElementById(`review_q_body_${qid}`);
+    const card = document.getElementById(`review_q_card_${qid}`);
+    if (body) {
+      body.style.display = this.collapsedReviewQuestions.has(qid) ? 'none' : 'block';
+    }
+    const toggleBtn = card ? card.querySelector('.btn-toggle-collapse') : null;
+    if (toggleBtn) {
+      toggleBtn.textContent = this.collapsedReviewQuestions.has(qid) ? '▼ Expand' : '▲ Collapse';
     }
   }
 
@@ -784,6 +805,9 @@ class FormResults {
       comment: defaultComment || '',
       gradedAt: new Date().toISOString()
     };
+
+    // Auto-collapse this question so admin clearly knows it's finished and moves to next
+    this.collapsedReviewQuestions.add(qid);
 
     // Recalculate score immediately
     resp.scoring = ScoringEngine.calculateTotalResults(this.form, resp.answers || {}, resp.manualGrades);
@@ -800,7 +824,7 @@ class FormResults {
       this.inspectResponse(resp.id);
     }
 
-    Utils.showToast(`Marked ${defaultComment} (${earnedPoints} pts). Total recalculated!`, 'success', 2000);
+    Utils.showToast(`Marked ${defaultComment} (${earnedPoints} pts) ✓ Question collapsed`, 'success', 2000);
   }
 
   async saveManualGrade(responseId, qid) {
@@ -821,6 +845,9 @@ class FormResults {
       gradedAt: new Date().toISOString()
     };
 
+    // Auto-collapse after saving manual grade
+    this.collapsedReviewQuestions.add(qid);
+
     // Recalculate score
     resp.scoring = ScoringEngine.calculateTotalResults(this.form, resp.answers || {}, resp.manualGrades);
 
@@ -836,7 +863,7 @@ class FormResults {
       this.inspectResponse(resp.id);
     }
 
-    Utils.showToast('Manual mark saved! Result updated.', 'success');
+    Utils.showToast('Manual mark saved! Question collapsed.', 'success');
   }
 
   // Save draft review without sending notifications
