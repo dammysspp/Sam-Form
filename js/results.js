@@ -541,7 +541,7 @@ class FormResults {
   }
 
   // --- INSPECTION & MANUAL GRADING MODAL ---
-  inspectResponse(responseId) {
+  inspectResponse(responseId, savedScrollTop = 0) {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
@@ -577,7 +577,7 @@ class FormResults {
           <button class="btn-icon" onclick="Results.closeInspector()" style="font-size:1.2rem; align-self:flex-start;">✕</button>
         </div>
 
-        <div class="modal-body" style="padding:1.25rem 1.5rem; max-height:78vh; overflow-y:auto;">
+        <div class="modal-body" id="inspect_modal_body_${resp.id}" style="padding:1.25rem 1.5rem; max-height:78vh; overflow-y:auto;">
           <!-- Modern High-Contrast Score KPI Header -->
           <div class="inspect-score-summary">
             <div class="inspect-kpi">
@@ -769,6 +769,14 @@ class FormResults {
     `;
 
     document.body.appendChild(modal);
+
+    // Restore scroll position if provided
+    if (savedScrollTop > 0) {
+      const modalBody = document.getElementById(`inspect_modal_body_${resp.id}`);
+      if (modalBody) {
+        modalBody.scrollTop = savedScrollTop;
+      }
+    }
   }
 
   closeInspector() {
@@ -799,6 +807,10 @@ class FormResults {
     const resp = this.responses.find(r => r.id === responseId);
     if (!resp) return;
 
+    // Capture current scroll position in the modal body
+    const modalBody = document.getElementById(`inspect_modal_body_${responseId}`);
+    const currentScrollTop = modalBody ? modalBody.scrollTop : 0;
+
     if (!resp.manualGrades) resp.manualGrades = {};
     resp.manualGrades[qid] = {
       earnedPoints: parseFloat(earnedPoints) || 0,
@@ -817,11 +829,11 @@ class FormResults {
     await this.reloadResponses();
     this.render();
 
-    // Re-render modal to display newly totaled scores, percentages, and grades live
+    // Re-render modal and restore EXACT scroll position
     const modal = document.getElementById(`inspect_modal_${resp.id}`);
     if (modal) {
       modal.remove();
-      this.inspectResponse(resp.id);
+      this.inspectResponse(resp.id, currentScrollTop);
     }
 
     Utils.showToast(`Marked ${defaultComment} (${earnedPoints} pts) ✓ Question collapsed`, 'success', 2000);
@@ -831,6 +843,10 @@ class FormResults {
     const ptsInput = document.getElementById(`manual_pts_${qid}`);
     const commentInput = document.getElementById(`manual_comment_${qid}`);
     if (!ptsInput) return;
+
+    // Capture current scroll position in the modal body
+    const modalBody = document.getElementById(`inspect_modal_body_${responseId}`);
+    const currentScrollTop = modalBody ? modalBody.scrollTop : 0;
 
     const earnedPoints = parseFloat(ptsInput.value) || 0;
     const comment = commentInput ? commentInput.value.trim() : '';
@@ -856,11 +872,11 @@ class FormResults {
     await this.reloadResponses();
     this.render();
 
-    // Refresh modal summary KPI numbers
+    // Refresh modal and restore EXACT scroll position
     const modal = document.getElementById(`inspect_modal_${resp.id}`);
     if (modal) {
       modal.remove();
-      this.inspectResponse(resp.id);
+      this.inspectResponse(resp.id, currentScrollTop);
     }
 
     Utils.showToast('Manual mark saved! Question collapsed.', 'success');
