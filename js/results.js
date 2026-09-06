@@ -672,82 +672,69 @@ class FormResults {
                     </div>
                   ` : ''}
 
-                  <!-- Manual Examiner Grading Panel -->
-                  <div class="manual-grading-panel">
-                    <div class="manual-grading-header">
-                      <span><strong><span style="vertical-align:-2px;">${icon('edit', 14)}</span> Examiner Evaluation & Marks</strong></span>
-                      ${qManual.gradedAt ? `<span class="text-success font-weight-bold" style="font-size:0.75rem;">✓ Graded on ${Utils.formatDate(qManual.gradedAt)}</span>` : '<span class="text-muted" style="font-size:0.75rem;">Awaiting review</span>'}
+                  <!-- Modern Intuitive Examiner Grading Studio -->
+                  <div class="manual-grading-panel" style="background:#ffffff; border:1.5px solid ${evalData.needsManualReview ? '#fde68a' : '#e2e8f0'}; border-radius:var(--radius-md); padding:1rem; margin-top:1rem; box-shadow:var(--shadow-xs);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.75rem; border-bottom:1px solid #f1f5f9; padding-bottom:0.6rem;">
+                      <div style="display:flex; align-items:center; gap:0.4rem; font-weight:700; color:var(--text-main); font-size:0.9rem;">
+                        <span style="color:var(--primary); font-size:1.1rem;">⚡</span>
+                        <span>Assign Marks & Feedback</span>
+                      </div>
+                      ${qManual.gradedAt ? `
+                        <span class="badge" style="background:#ecfdf5; color:#047857; font-weight:700; font-size:0.75rem; border:1px solid #a7f3d0;">
+                          ✓ Graded on ${Utils.formatDate(qManual.gradedAt)}
+                        </span>
+                      ` : `
+                        <span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700; font-size:0.75rem; border:1px solid #fde68a;">
+                          ⏳ Needs Evaluation
+                        </span>
+                      `}
                     </div>
 
-                    ${qManual.gradedAt ? `
-                      <!-- Graded State: Compact Status Badge with Remark/Edit Icon -->
-                      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface); padding:0.6rem 0.85rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); margin-top:0.4rem;">
-                        <div style="display:flex; align-items:center; gap:0.5rem;">
-                          <span class="badge ${qManual.earnedPoints > 0 ? 'badge-correct' : 'badge-incorrect'}" style="font-size:0.8rem; padding:0.3rem 0.6rem;">
-                            ${qManual.earnedPoints > 0 ? `✓ Awarded +${qManual.earnedPoints} pts` : '✕ 0 pts (Incorrect)'}
-                          </span>
-                          ${qManual.comment ? `<span style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">"${Utils.escapeHTML(qManual.comment)}"</span>` : ''}
-                        </div>
-                        <button type="button" class="btn btn-sm btn-ghost" onclick="Results.toggleRemarkMode('${resp.id}', '${q.id}')" title="Remark / Edit Mark">
-                          <span style="vertical-align:-2px;">${icon('edit', 14)}</span> Remark
-                        </button>
-                      </div>
-
-                      <!-- Hidden Remark Editor -->
-                      <div id="remark_box_${q.id}" style="display:none; margin-top:0.6rem; padding-top:0.6rem; border-top:1px dashed var(--border-color);">
-                        <div class="manual-quick-btn-row" style="margin-bottom:0.5rem;">
-                          <button type="button" class="btn btn-sm btn-success" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Correct')">
-                            ✓ Correct (+${maxPts} pts)
-                          </button>
-                          ${maxPts > 1 ? `
-                            <button type="button" class="btn btn-sm btn-secondary" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Partial Credit')">
-                              ½ Partial (+${maxPts / 2} pts)
-                            </button>
-                          ` : ''}
-                          <button type="button" class="btn btn-sm btn-danger" onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Incorrect')">
-                            ✕ Incorrect (0 pts)
-                          </button>
-                        </div>
-                        <div class="manual-grading-controls">
-                          <div class="points-input-wrap">
-                            <label class="form-label-sm">Custom Mark (0 to ${maxPts}):</label>
-                            <input type="number" min="0" max="${maxPts}" step="0.5" id="manual_pts_${q.id}" class="form-input form-input-sm" value="${qManual.earnedPoints || 0}" style="width:110px;" />
-                          </div>
-                          <div class="comments-input-wrap">
-                            <label class="form-label-sm">Feedback / Notes to Candidate:</label>
-                            <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" placeholder="Optional feedback..." value="${Utils.escapeHTML(qManual.comment || '')}" />
-                          </div>
-                          <button type="button" class="btn btn-sm btn-primary" onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save</button>
-                        </div>
-                      </div>
-                    ` : `
-                      <!-- Ungraded State: Quick Mark Buttons -->
-                      <div class="manual-quick-btn-row">
-                        <button type="button" class="btn btn-sm btn-success" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Correct')">
-                          ✓ Correct (+${maxPts} pts)
+                    <!-- 1-Tap Quick Mark Action Bar -->
+                    <div style="margin-bottom:0.85rem;">
+                      <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.4rem;">
+                        1-Tap Instant Grading:
+                      </label>
+                      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:0.5rem;">
+                        <button type="button" class="btn btn-sm ${qManual.earnedPoints === maxPts ? 'btn-success' : 'btn-outline'}" 
+                          style="${qManual.earnedPoints === maxPts ? 'background:#10b981; color:#fff; border-color:#059669; font-weight:800;' : 'color:#059669; border-color:#10b981;'}"
+                          onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts}, 'Full Marks')">
+                          ✓ Full (${maxPts} pts)
                         </button>
                         ${maxPts > 1 ? `
-                          <button type="button" class="btn btn-sm btn-secondary" onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Partial Credit')">
-                            ½ Partial (+${maxPts / 2} pts)
+                          <button type="button" class="btn btn-sm ${qManual.earnedPoints === (maxPts / 2) ? 'btn-primary' : 'btn-outline'}" 
+                            style="${qManual.earnedPoints === (maxPts / 2) ? 'background:var(--primary); color:#fff; font-weight:800;' : 'color:var(--primary); border-color:var(--primary);'}"
+                            onclick="Results.quickMark('${resp.id}', '${q.id}', ${maxPts / 2}, 'Half Credit')">
+                            ½ Half (${maxPts / 2} pts)
                           </button>
                         ` : ''}
-                        <button type="button" class="btn btn-sm btn-danger" onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Incorrect')">
-                          ✕ Incorrect (0 pts)
+                        <button type="button" class="btn btn-sm ${qManual.gradedAt && qManual.earnedPoints === 0 ? 'btn-danger' : 'btn-outline'}" 
+                          style="${qManual.gradedAt && qManual.earnedPoints === 0 ? 'background:#ef4444; color:#fff; border-color:#dc2626; font-weight:800;' : 'color:#dc2626; border-color:#ef4444;'}"
+                          onclick="Results.quickMark('${resp.id}', '${q.id}', 0, 'Zero Marks / Incorrect')">
+                          ✕ Zero (0 pts)
                         </button>
                       </div>
+                    </div>
 
-                      <div class="manual-grading-controls">
-                        <div class="points-input-wrap">
-                          <label class="form-label-sm">Custom Mark (0 to ${maxPts}):</label>
-                          <input type="number" min="0" max="${maxPts}" step="0.5" id="manual_pts_${q.id}" class="form-input form-input-sm" value="${evalData.earnedPoints || 0}" style="width:110px;" />
+                    <!-- Custom Marks & Feedback Row -->
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:0.75rem; display:flex; flex-direction:column; gap:0.6rem;">
+                      <div style="display:flex; gap:0.6rem; align-items:flex-end; flex-wrap:wrap;">
+                        <div style="width:130px; flex-shrink:0;">
+                          <label class="form-label-sm" style="font-size:0.75rem; font-weight:700;">Award Marks (0 - ${maxPts}):</label>
+                          <input type="number" min="0" max="${maxPts}" step="0.25" id="manual_pts_${q.id}" class="form-input form-input-sm" 
+                            value="${qManual.earnedPoints !== undefined ? qManual.earnedPoints : (evalData.earnedPoints || 0)}" style="font-weight:700; font-size:0.95rem; text-align:center;" />
                         </div>
-                        <div class="comments-input-wrap">
-                          <label class="form-label-sm">Feedback / Notes to Candidate:</label>
-                          <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" placeholder="Optional feedback..." value="${Utils.escapeHTML(qManual.comment || '')}" />
+                        <div style="flex:1; min-width:180px;">
+                          <label class="form-label-sm" style="font-size:0.75rem; font-weight:700;">Examiner Feedback / Note (Optional):</label>
+                          <input type="text" id="manual_comment_${q.id}" class="form-input form-input-sm" 
+                            placeholder="e.g. Well reasoned, correct reference..." value="${Utils.escapeHTML(qManual.comment || '')}" />
                         </div>
-                        <button type="button" class="btn btn-sm btn-primary" onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">Save</button>
+                        <button type="button" class="btn btn-sm btn-primary" style="font-weight:700; padding:0.45rem 1rem; flex-shrink:0;" 
+                          onclick="Results.saveManualGrade('${resp.id}', '${q.id}')">
+                          💾 Save Mark
+                        </button>
                       </div>
-                    `}
+                    </div>
                   </div>
                 </div>
               `;
