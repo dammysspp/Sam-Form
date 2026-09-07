@@ -122,42 +122,60 @@ class FormResults {
     root.innerHTML = `
       <header class="results-header">
         <div class="results-header-container">
-          <div>
+          <div class="results-title-block">
             <div class="breadcrumbs">
-              <a href="index.html">Dashboard</a> / <a href="builder.html?id=${this.form.id}">${Utils.escapeHTML(this.form.title)}</a> / <span>Responses & Grading</span>
+              <a href="index.html">Dashboard</a> / <a href="builder.html?id=${this.form.id}">${Utils.escapeHTML(this.form.title)}</a> / <span>Analytics</span>
             </div>
-            <h1 class="results-page-title">${Utils.escapeHTML(this.form.title)} — Results</h1>
+            <h1 class="results-page-title">${Utils.escapeHTML(this.form.title)}</h1>
           </div>
           <div class="results-header-actions">
-            <button class="btn btn-secondary" onclick="Results.exportCSV()">Export CSV</button>
-            <button class="btn btn-secondary" onclick="Results.exportJSON()">Export JSON</button>
-            <button class="btn btn-primary" onclick="window.print()">Print Summary</button>
+            <button class="btn btn-secondary" onclick="Results.exportCSV()" title="Export as CSV">
+              ${icon('download', 14)} <span class="btn-text">CSV</span>
+            </button>
+            <button class="btn btn-secondary" onclick="Results.exportJSON()" title="Export as JSON">
+              ${icon('fileText', 14)} <span class="btn-text">JSON</span>
+            </button>
+            <button class="btn btn-primary" onclick="window.print()" title="Print Summary Report">
+              ${icon('printer', 14)} <span class="btn-text">Print Report</span>
+            </button>
           </div>
         </div>
       </header>
 
       <main class="results-content-container">
-        <!-- KPI Metrics Grid -->
+        <!-- Modern KPI Metric Cards Grid -->
         <div class="metrics-grid">
-          <div class="metric-card">
-            <span class="metric-icon">👥</span>
+          <div class="metric-card metric-submissions">
+            <div class="metric-top-row">
+              <span class="metric-icon">${icon('users', 18)}</span>
+              <span class="metric-chip">Total</span>
+            </div>
             <div class="metric-val">${total}</div>
-            <div class="metric-label">Total Submissions</div>
+            <div class="metric-label">Submissions</div>
           </div>
-          <div class="metric-card">
-            <span class="metric-icon">📊</span>
+          <div class="metric-card metric-score">
+            <div class="metric-top-row">
+              <span class="metric-icon">${icon('award', 18)}</span>
+              <span class="metric-chip ${avgScore >= 60 ? 'chip-pass' : 'chip-fail'}">${avgScore >= 60 ? 'Passing' : 'Below Avg'}</span>
+            </div>
             <div class="metric-val">${avgScore}%</div>
-            <div class="metric-label">Average Score</div>
+            <div class="metric-label">Avg. Score</div>
           </div>
-          <div class="metric-card">
-            <span class="metric-icon">⏳</span>
+          <div class="metric-card metric-pending">
+            <div class="metric-top-row">
+              <span class="metric-icon">${icon('hourglass', 18)}</span>
+              ${pendingGradingCount > 0 ? `<span class="metric-chip chip-pending">Action Needed</span>` : `<span class="metric-chip chip-graded">Completed</span>`}
+            </div>
             <div class="metric-val">${pendingGradingCount}</div>
-            <div class="metric-label">Pending Manual Review</div>
+            <div class="metric-label">Pending Review</div>
           </div>
-          <div class="metric-card">
-            <span class="metric-icon">⏱</span>
+          <div class="metric-card metric-time">
+            <div class="metric-top-row">
+              <span class="metric-icon">${icon('clock', 18)}</span>
+              <span class="metric-chip">Paced</span>
+            </div>
             <div class="metric-val">${Utils.formatTime(avgDuration)}</div>
-            <div class="metric-label">Avg. Completion Time</div>
+            <div class="metric-label">Avg. Duration</div>
           </div>
         </div>
 
