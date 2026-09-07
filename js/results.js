@@ -658,18 +658,18 @@ class FormResults {
 
               return `
                 <div class="inspect-q-item ${evalData.needsManualReview ? 'inspect-pending-review' : evalData.isCorrect ? 'inspect-correct' : 'inspect-incorrect'}" id="review_q_card_${q.id}">
-                  <div class="inspect-q-title-row" style="cursor:pointer;" onclick="Results.toggleReviewQuestionCollapse('${q.id}')">
-                    <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:0;">
-                      <span class="btn-toggle-collapse" style="font-size:0.85rem; padding:2px 6px; border-radius:4px; background:#f1f5f9; color:var(--text-muted);">
-                        ${isCollapsed ? '▼ Expand' : '▲ Collapse'}
+                  <div class="inspect-q-title-row" style="cursor:pointer; display:flex; flex-direction:column; gap:0.5rem; width:100%;" onclick="Results.toggleReviewQuestionCollapse('${q.id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:0.5rem;">
+                      <span class="btn-toggle-collapse" style="font-size:0.75rem; font-weight:700; padding:3px 8px; border-radius:4px; background:#f1f5f9; color:var(--text-muted); border:1px solid var(--border-color); flex-shrink:0;">
+                        ${isCollapsed ? '▼ Expand Question' : '▲ Collapse Question'}
                       </span>
-                      <span style="white-space:${isCollapsed ? 'nowrap' : 'normal'}; overflow:${isCollapsed ? 'hidden' : 'visible'}; text-overflow:${isCollapsed ? 'ellipsis' : 'clip'};">
-                        <strong>Q${idx + 1}.</strong> ${Utils.escapeHTML(q.question)}
+                      <span class="badge ${evalData.isCorrect ? 'badge-correct' : 'badge-incorrect'}" style="flex-shrink:0; font-size:0.75rem; font-weight:700;">
+                        ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '(Needs Review)' : '✓'}
                       </span>
                     </div>
-                    <span class="badge ${evalData.isCorrect ? 'badge-correct' : 'badge-incorrect'}" style="flex-shrink:0; margin-left:0.5rem;">
-                      ${hasEarned} / ${maxPts} pts ${evalData.needsManualReview ? '(Needs Review)' : '✓'}
-                    </span>
+                    <div style="font-size:0.92rem; font-weight:700; color:var(--text-main); line-height:1.45; word-break:break-word; width:100%;">
+                      <strong>Q${idx + 1}.</strong> ${Utils.escapeHTML(q.question)}
+                    </div>
                   </div>
 
                   <div class="review-q-body" id="review_q_body_${q.id}" style="${isCollapsed ? 'display:none;' : 'display:block;'}">
